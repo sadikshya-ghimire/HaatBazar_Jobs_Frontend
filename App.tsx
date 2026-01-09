@@ -1,12 +1,432 @@
-import { ScreenContent } from 'components/ScreenContent';
+import { useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { auth } from 'components/config/firebase';
+import { storage } from 'components/utils/storage';
+import HomePage from 'components/home/HomePage';
+import SignUpPage from 'components/auth/SignUpPage';
+import LoginPage from 'components/auth/LoginPage';
+import VerifyCodePage from 'components/auth/VerifyCodePage';
+import EmailVerificationPage from 'components/auth/EmailVerificationPage';
+import ForgotPasswordPage from 'components/auth/ForgotPasswordPage';
+import ResetPasswordPage from 'components/auth/ResetPasswordPage';
+import WorkerRegistrationStep1 from 'components/registration/WorkerRegistrationStep1';
+import WorkerRegistrationStep2 from 'components/registration/WorkerRegistrationStep2';
+import WorkerRegistrationStep3 from 'components/registration/WorkerRegistrationStep3';
+import WorkerRegistrationStep4 from 'components/registration/WorkerRegistrationStep4';
+import WorkerRegistrationStep5 from 'components/registration/WorkerRegistrationStep5';
+import EmployerRegistrationStep1 from 'components/registration/EmployerRegistrationStep1';
+import EmployerRegistrationStep2 from 'components/registration/EmployerRegistrationStep2';
+import EmployerRegistrationStep3 from 'components/registration/EmployerRegistrationStep3';
+import WorkerDashboard from 'components/dashboard/WorkerDashboard';
+import EmployerDashboard from 'components/dashboard/EmployerDashboard';
 
 import './global.css';
 
+type AppScreen = 'home' | 'signup' | 'verifySignup' | 'verifyEmail' | 'login' | 'forgotPassword' | 'resetPassword' | 'workerReg1' | 'workerReg2' | 'workerReg3' | 'workerReg4' | 'workerReg5' | 'employerReg1' | 'employerReg2' | 'employerReg3' | 'dashboard';
+type UserType = 'worker' | 'employer' | null;
+
+interface WorkerRegistrationData {
+  profilePhoto?: string;
+  nidNumber?: string;
+  nidFront?: string;
+  nidBack?: string;
+  skills?: string[];
+  experience?: string;
+  hourlyRate?: string;
+  bio?: string;
+  address?: string;
+  city?: string;
+  district?: string;
+  availability?: string[];
+}
+
+interface EmployerRegistrationData {
+  profilePhoto?: string;
+  nidNumber?: string;
+  nidFront?: string;
+  nidBack?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  email?: string;
+  companyName?: string;
+  address?: string;
+  city?: string;
+  district?: string;
+}
+
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<AppScreen>('home');
+  const [userType, setUserType] = useState<UserType>(null);
+  const [userName, setUserName] = useState<string>('User');
+  const [resetMethod, setResetMethod] = useState<'phone' | 'email'>('phone');
+  const [resetContact, setResetContact] = useState<string>('');
+  const [signupMethod, setSignupMethod] = useState<'phone' | 'email'>('phone');
+  const [signupContact, setSignupContact] = useState<string>('');
+  const [signupPassword, setSignupPassword] = useState<string>(''); // Store password for phone signup
+  const [signupEmail, setSignupEmail] = useState<string>(''); // Store email for verification page
+  const [workerRegistrationData, setWorkerRegistrationData] = useState<WorkerRegistrationData>({});
+  const [employerRegistrationData, setEmployerRegistrationData] = useState<EmployerRegistrationData>({});
+
+  // Check for email verification on app load (web only)
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const mode = urlParams.get('mode');
+      
+      if (mode === 'verifyEmail') {
+        setCurrentScreen('verifyEmail');
+      }
+    }
+  }, []);
+
+  const handleSignUp = () => {
+    setCurrentScreen('signup');
+  };
+
+  const handleLogin = () => {
+    setCurrentScreen('login');
+  };
+
+  const handleBackToHome = () => {
+    setCurrentScreen('home');
+  };
+
+  const handleForgotPassword = () => {
+    setCurrentScreen('forgotPassword');
+  };
+
+  const handleSendResetCode = (method: 'phone' | 'email', contact: string) => {
+    setResetMethod(method);
+    setResetContact(contact);
+    setCurrentScreen('resetPassword');
+  };
+
+  const handleResetSuccess = () => {
+    setCurrentScreen('login');
+  };
+
+  const handleSignUpSuccess = (selectedUserType: 'worker' | 'employer', method: 'phone' | 'email', contact: string, password?: string) => {
+    console.log('📝 handleSignUpSuccess called');
+    console.log('User Type:', selectedUserType);
+    console.log('Method:', method);
+    console.log('Contact:', contact);
+    console.log('Password received:', password ? 'YES (length: ' + password.length + ')' : 'NO - MISSING!');
+    
+    setUserType(selectedUserType);
+    setSignupMethod(method);
+    setSignupContact(contact);
+    if (password) {
+      console.log('✅ Storing password in state');
+      setSignupPassword(password);
+    } else {
+      console.log('⚠️ No password provided!');
+    }
+    
+    // For email signup, go to email verification page
+    if (method === 'email') {
+      setSignupEmail(contact);
+      setCurrentScreen('verifyEmail');
+    } else {
+      // For phone signup, go to OTP verification page
+      console.log('📱 Going to OTP verification with password:', password ? 'YES' : 'NO');
+      setCurrentScreen('verifySignup');
+    }
+  };
+
+  const handleVerifySuccess = () => {
+    // After verification, redirect based on user type
+    if (userType === 'worker') {
+      // Workers go through registration process
+      setCurrentScreen('workerReg1');
+    } else {
+      // Employers go through registration process
+      setCurrentScreen('employerReg1');
+    }
+  };
+
+  const handleEmailVerified = () => {
+    // After email verification, go to registration based on user type
+    if (userType === 'worker') {
+      setCurrentScreen('workerReg1');
+    } else {
+      setCurrentScreen('employerReg1');
+    }
+  };
+
+  // Worker Registration Handlers
+  const handleWorkerRegistrationStep1Complete = (photoUri: string) => {
+    setWorkerRegistrationData({ ...workerRegistrationData, profilePhoto: photoUri });
+    setCurrentScreen('workerReg2');
+  };
+
+  const handleWorkerRegistrationStep2Complete = (data: { nidNumber: string; nidFront: string; nidBack: string }) => {
+    setWorkerRegistrationData({ ...workerRegistrationData, ...data });
+    setCurrentScreen('workerReg3');
+  };
+
+  const handleWorkerRegistrationStep3Complete = (skills: string[]) => {
+    setWorkerRegistrationData({ ...workerRegistrationData, skills });
+    setCurrentScreen('workerReg4');
+  };
+
+  const handleWorkerRegistrationStep4Complete = (data: { experience: string; hourlyRate: string; bio: string }) => {
+    setWorkerRegistrationData({ ...workerRegistrationData, ...data });
+    setCurrentScreen('workerReg5');
+  };
+
+  const handleWorkerRegistrationStep5Complete = async (data: { address: string; city: string; district: string; availability: string[] }) => {
+    setWorkerRegistrationData({ ...workerRegistrationData, ...data });
+    console.log('Complete worker registration data:', { ...workerRegistrationData, ...data });
+    
+    // Mark profile as complete in backend
+    const pendingFirebaseUid = await storage.getItem('pendingFirebaseUid');
+    const firebaseUid = pendingFirebaseUid || auth.currentUser?.uid;
+    if (firebaseUid) {
+      console.log('✅ Marking profile as complete...');
+      const { userService } = await import('components/services/userService');
+      await userService.markProfileComplete(firebaseUid);
+      await storage.removeItem('pendingFirebaseUid');
+    }
+    
+    setCurrentScreen('dashboard');
+  };
+
+  const handleSkipWorkerRegistration = () => {
+    setCurrentScreen('dashboard');
+  };
+
+  // Employer Registration Handlers
+  const handleEmployerRegistrationStep1Complete = (photoUri: string) => {
+    setEmployerRegistrationData({ ...employerRegistrationData, profilePhoto: photoUri });
+    setCurrentScreen('employerReg2');
+  };
+
+  const handleEmployerRegistrationStep2Complete = (data: { nidNumber: string; nidFront: string; nidBack: string }) => {
+    setEmployerRegistrationData({ ...employerRegistrationData, ...data });
+    setCurrentScreen('employerReg3');
+  };
+
+  const handleEmployerRegistrationStep3Complete = async (data: { 
+    fullName: string; 
+    phoneNumber: string; 
+    email: string; 
+    companyName: string; 
+    address: string; 
+    city: string; 
+    district: string; 
+  }) => {
+    setEmployerRegistrationData({ ...employerRegistrationData, ...data });
+    console.log('Complete employer registration data:', { ...employerRegistrationData, ...data });
+    
+    // Mark profile as complete in backend
+    const pendingFirebaseUid = await storage.getItem('pendingFirebaseUid');
+    const firebaseUid = pendingFirebaseUid || auth.currentUser?.uid;
+    if (firebaseUid) {
+      console.log('✅ Marking profile as complete...');
+      const { userService } = await import('components/services/userService');
+      await userService.markProfileComplete(firebaseUid);
+      await storage.removeItem('pendingFirebaseUid');
+    }
+    
+    setCurrentScreen('dashboard');
+  };
+
+  const handleSkipEmployerRegistration = () => {
+    setCurrentScreen('dashboard');
+  };
+
+  const handleLoginSuccess = (userType: 'worker' | 'employer', profileComplete: boolean, displayName?: string) => {
+    console.log('🎯 handleLoginSuccess called');
+    console.log('User Type:', userType);
+    console.log('Profile Complete:', profileComplete);
+    console.log('Display Name:', displayName);
+    
+    setUserType(userType);
+    setUserName(displayName || 'User');
+    
+    if (profileComplete) {
+      // Profile is complete - go directly to dashboard
+      console.log('✅ Profile complete - going to dashboard');
+      setCurrentScreen('dashboard');
+    } else {
+      // Profile incomplete - go to registration
+      console.log('⚠️ Profile incomplete - going to registration');
+      if (userType === 'worker') {
+        setCurrentScreen('workerReg1');
+      } else {
+        setCurrentScreen('employerReg1');
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    setUserType(null);
+    setCurrentScreen('home');
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'home':
+        return (
+          <HomePage 
+            onLogin={handleLogin}
+            onSignup={handleSignUp}
+          />
+        );
+      
+      case 'signup':
+        return (
+          <SignUpPage
+            onBack={handleBackToHome}
+            onLogin={handleLogin}
+            onSignUpSuccess={handleSignUpSuccess}
+          />
+        );
+      
+      case 'verifySignup':
+        return (
+          <VerifyCodePage
+            onBack={() => setCurrentScreen('signup')}
+            onVerifySuccess={handleVerifySuccess}
+            onChangeContact={() => setCurrentScreen('signup')}
+            contactInfo={signupContact}
+            verificationMethod={signupMethod}
+            password={signupPassword}
+          />
+        );
+      
+      case 'verifyEmail':
+        return (
+          <EmailVerificationPage
+            email={signupEmail}
+            userType={userType || 'worker'}
+            onVerified={handleEmailVerified}
+            onBack={() => setCurrentScreen('signup')}
+          />
+        );
+      
+      case 'login':
+        return (
+          <LoginPage
+            onBack={handleBackToHome}
+            onSignUp={handleSignUp}
+            onLoginSuccess={handleLoginSuccess}
+            onForgotPassword={handleForgotPassword}
+          />
+        );
+      
+      case 'forgotPassword':
+        return (
+          <ForgotPasswordPage
+            onBack={handleBackToHome}
+            onBackToLogin={handleLogin}
+            onSendCode={handleSendResetCode}
+          />
+        );
+      
+      case 'resetPassword':
+        return (
+          <ResetPasswordPage
+            onBack={handleBackToHome}
+            onBackToLogin={handleLogin}
+            onResetSuccess={handleResetSuccess}
+            onChangeContact={handleForgotPassword}
+            contactInfo={resetContact}
+            resetMethod={resetMethod}
+          />
+        );
+      
+      case 'workerReg1':
+        return (
+          <WorkerRegistrationStep1
+            onBack={handleBackToHome}
+            onContinue={handleWorkerRegistrationStep1Complete}
+            onSkip={handleSkipWorkerRegistration}
+          />
+        );
+      
+      case 'workerReg2':
+        return (
+          <WorkerRegistrationStep2
+            onBack={() => setCurrentScreen('workerReg1')}
+            onContinue={handleWorkerRegistrationStep2Complete}
+            onSkip={handleSkipWorkerRegistration}
+          />
+        );
+      
+      case 'workerReg3':
+        return (
+          <WorkerRegistrationStep3
+            onBack={() => setCurrentScreen('workerReg2')}
+            onContinue={handleWorkerRegistrationStep3Complete}
+            onSkip={handleSkipWorkerRegistration}
+          />
+        );
+      
+      case 'workerReg4':
+        return (
+          <WorkerRegistrationStep4
+            onBack={() => setCurrentScreen('workerReg3')}
+            onContinue={handleWorkerRegistrationStep4Complete}
+            onSkip={handleSkipWorkerRegistration}
+          />
+        );
+      
+      case 'workerReg5':
+        return (
+          <WorkerRegistrationStep5
+            onBack={() => setCurrentScreen('workerReg4')}
+            onSubmit={handleWorkerRegistrationStep5Complete}
+          />
+        );
+      
+      case 'employerReg1':
+        return (
+          <EmployerRegistrationStep1
+            onBack={handleBackToHome}
+            onContinue={handleEmployerRegistrationStep1Complete}
+            onSkip={handleSkipEmployerRegistration}
+          />
+        );
+      
+      case 'employerReg2':
+        return (
+          <EmployerRegistrationStep2
+            onBack={() => setCurrentScreen('employerReg1')}
+            onContinue={handleEmployerRegistrationStep2Complete}
+            onSkip={handleSkipEmployerRegistration}
+          />
+        );
+      
+      case 'employerReg3':
+        return (
+          <EmployerRegistrationStep3
+            onBack={() => setCurrentScreen('employerReg2')}
+            onSubmit={handleEmployerRegistrationStep3Complete}
+          />
+        );
+      
+      case 'dashboard':
+        return userType === 'worker' ? (
+          <WorkerDashboard onLogout={handleLogout} userName={userName} />
+        ) : (
+          <EmployerDashboard onLogout={handleLogout} userName={userName} />
+        );
+      
+      default:
+        return (
+          <HomePage 
+            onLogin={handleLogin}
+            onSignup={handleSignUp}
+          />
+        );
+    }
+  };
+
   return (
     <>
-      <ScreenContent title="Home" path="App.tsx"></ScreenContent>
+      {renderScreen()}
       <StatusBar style="auto" />
     </>
   );
