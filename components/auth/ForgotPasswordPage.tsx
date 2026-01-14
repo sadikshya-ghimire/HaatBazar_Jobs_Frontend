@@ -32,7 +32,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
           <View className="flex-row items-center mb-4">
             <Pressable onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#ffffff" />
@@ -52,9 +52,9 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
                 onPress={() => setResetMethod('phone')}
                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
                 style={{
-                  backgroundColor: resetMethod === 'phone' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: resetMethod === 'phone' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: resetMethod === 'phone' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: resetMethod === 'phone' ? '#447788' : '#e5e7eb',
                   shadowColor: '#000000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.05,
@@ -80,9 +80,9 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
                 onPress={() => setResetMethod('email')}
                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
                 style={{
-                  backgroundColor: resetMethod === 'email' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: resetMethod === 'email' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: resetMethod === 'email' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: resetMethod === 'email' ? '#447788' : '#e5e7eb',
                   shadowColor: '#000000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.05,
@@ -172,7 +172,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
               onPress={handleSendCode}
               className="py-4 rounded-xl active:opacity-90 flex-row items-center justify-center"
               style={{
-                backgroundColor: '#00B8DB',
+                backgroundColor: '#447788',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,

@@ -32,7 +32,7 @@ const WorkerRegistrationStep4 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center flex-1">
               <Pressable onPress={onBack} className="mr-4">
@@ -152,7 +152,7 @@ const WorkerRegistrationStep4 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
               disabled={!isFormValid}
               className="py-4 rounded-xl active:opacity-90"
               style={{
-                backgroundColor: isFormValid ? '#00B8DB' : '#d1d5db',
+                backgroundColor: isFormValid ? '#447788' : '#d1d5db',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: isFormValid ? 0.2 : 0.1,

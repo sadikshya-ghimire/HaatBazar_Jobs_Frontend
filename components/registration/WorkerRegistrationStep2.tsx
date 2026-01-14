@@ -6,9 +6,13 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { auth } from '../config/firebase';
+import { profileService } from '../services/profileService';
 
 interface WorkerRegistrationStep2Props {
   onBack?: () => void;
@@ -20,6 +24,7 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
   const [nidNumber, setNidNumber] = useState('');
   const [nidFront, setNidFront] = useState<string | null>(null);
   const [nidBack, setNidBack] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const pickImage = async (type: 'front' | 'back') => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -44,9 +49,54 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
     }
   };
 
-  const handleContinue = () => {
-    if (nidNumber && nidFront && nidBack && onContinue) {
-      onContinue({ nidNumber, nidFront, nidBack });
+  const handleContinue = async () => {
+    if (!nidNumber || !nidFront || !nidBack) return;
+
+    try {
+      setIsUploading(true);
+      console.log('📤 Uploading NID photos...');
+
+      // Upload NID photos
+      const uploadResult = await profileService.uploadNIDPhotos(nidFront, nidBack);
+
+      if (!uploadResult.success) {
+        alert('Failed to upload NID photos. Please try again.');
+        setIsUploading(false);
+        return;
+      }
+
+      console.log('✅ NID photos uploaded:', uploadResult.urls);
+
+      // Save to database
+      const firebaseUid = auth.currentUser?.uid;
+      if (!firebaseUid) {
+        alert('User not authenticated');
+        setIsUploading(false);
+        return;
+      }
+
+      const saveResult = await profileService.saveWorkerProfile(firebaseUid, 2, {
+        nidNumber,
+        nidFront: uploadResult.urls.nidFront,
+        nidBack: uploadResult.urls.nidBack,
+      });
+
+      if (saveResult.success) {
+        console.log('✅ NID information saved to database');
+        setIsUploading(false);
+        onContinue?.({ 
+          nidNumber, 
+          nidFront: uploadResult.urls.nidFront, 
+          nidBack: uploadResult.urls.nidBack 
+        });
+      } else {
+        alert('Failed to save NID information. Please try again.');
+        setIsUploading(false);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+      setIsUploading(false);
     }
   };
 
@@ -55,11 +105,16 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-6 py-6"
+        >
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center flex-1">
-              <Pressable onPress={onBack} className="mr-4">
+              <Pressable onPress={onBack} className="mr-4" disabled={isUploading}>
                 <Ionicons name="arrow-back" size={24} color="#ffffff" />
               </Pressable>
               <Text className="text-white text-xl font-bold">Worker Registration</Text>
@@ -80,7 +135,7 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
               }}
             />
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Content */}
         <View className="items-center px-6 py-8">
@@ -111,6 +166,7 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
                 onChangeText={setNidNumber}
                 className="text-gray-700"
                 placeholderTextColor="#9ca3af"
+                editable={!isUploading}
               />
             </View>
 
@@ -129,6 +185,7 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
                 shadowRadius: 2,
                 elevation: 1,
               }}
+              disabled={isUploading}
             >
               <View className="items-center">
                 <Ionicons 
@@ -158,6 +215,7 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
                 shadowRadius: 2,
                 elevation: 1,
               }}
+              disabled={isUploading}
             >
               <View className="items-center">
                 <Ionicons 
@@ -175,10 +233,10 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
             {/* Continue Button */}
             <Pressable
               onPress={handleContinue}
-              disabled={!isFormValid}
+              disabled={!isFormValid || isUploading}
               className="py-4 rounded-xl active:opacity-90 mb-3"
               style={{
-                backgroundColor: isFormValid ? '#00B8DB' : '#d1d5db',
+                backgroundColor: isFormValid && !isUploading ? '#447788' : '#d1d5db',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: isFormValid ? 0.2 : 0.1,
@@ -186,9 +244,18 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
                 elevation: isFormValid ? 6 : 2,
               }}
             >
-              <Text className="text-white text-center font-bold text-base">
-                Continue
-              </Text>
+              {isUploading ? (
+                <View className="flex-row items-center justify-center">
+                  <ActivityIndicator color="#ffffff" size="small" />
+                  <Text className="text-white text-center font-bold text-base ml-2">
+                    Uploading...
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-white text-center font-bold text-base">
+                  Continue
+                </Text>
+              )}
             </Pressable>
 
             {/* Back Button */}
@@ -200,6 +267,7 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
                 borderWidth: 1,
                 borderColor: '#e5e7eb',
               }}
+              disabled={isUploading}
             >
               <Text className="text-gray-700 text-center font-semibold text-base">
                 Back
@@ -207,7 +275,7 @@ const WorkerRegistrationStep2 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
             </Pressable>
 
             {/* Skip Button */}
-            <Pressable onPress={onSkip} className="mt-2">
+            <Pressable onPress={onSkip} className="mt-2" disabled={isUploading}>
               <Text className="text-gray-600 text-center text-sm">
                 Skip for now
               </Text>

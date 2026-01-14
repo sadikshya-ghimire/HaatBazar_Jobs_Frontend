@@ -6,9 +6,13 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { auth } from '../config/firebase';
+import { profileService } from '../services/profileService';
 
 interface EmployerRegistrationStep1Props {
   onBack?: () => void;
@@ -18,6 +22,7 @@ interface EmployerRegistrationStep1Props {
 
 const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }: EmployerRegistrationStep1Props) => {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -39,20 +44,62 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }: EmployerRegis
     }
   };
 
-  const handleContinue = () => {
-    if (profilePhoto && onContinue) {
-      onContinue(profilePhoto);
+  const handleContinue = async () => {
+    if (!profilePhoto) return;
+
+    try {
+      setIsUploading(true);
+      console.log('📤 Uploading profile photo...');
+
+      const uploadResult = await profileService.uploadProfilePhoto(profilePhoto);
+
+      if (!uploadResult.success) {
+        alert('Failed to upload photo. Please try again.');
+        setIsUploading(false);
+        return;
+      }
+
+      console.log('✅ Photo uploaded:', uploadResult.url);
+
+      const firebaseUid = auth.currentUser?.uid;
+      if (!firebaseUid) {
+        alert('User not authenticated');
+        setIsUploading(false);
+        return;
+      }
+
+      const saveResult = await profileService.saveEmployerProfile(firebaseUid, 1, {
+        profilePhoto: uploadResult.url,
+      });
+
+      if (saveResult.success) {
+        console.log('✅ Profile photo saved to database');
+        setIsUploading(false);
+        onContinue?.(uploadResult.url);
+      } else {
+        alert('Failed to save profile. Please try again.');
+        setIsUploading(false);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+      setIsUploading(false);
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-6 py-6"
+        >
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center flex-1">
-              <Pressable onPress={onBack} className="mr-4">
+              <Pressable onPress={onBack} className="mr-4" disabled={isUploading}>
                 <Ionicons name="arrow-back" size={24} color="#ffffff" />
               </Pressable>
               <Text className="text-white text-xl font-bold">Employer Registration</Text>
@@ -73,7 +120,7 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }: EmployerRegis
               }}
             />
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Content */}
         <View className="items-center px-6 py-12">
@@ -89,6 +136,7 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }: EmployerRegis
               <Pressable
                 onPress={pickImage}
                 className="relative"
+                disabled={isUploading}
               >
                 <View
                   className="w-40 h-40 rounded-full items-center justify-center"
@@ -113,7 +161,7 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }: EmployerRegis
                 <View
                   className="absolute bottom-0 right-0 w-12 h-12 rounded-full items-center justify-center"
                   style={{
-                    backgroundColor: '#00B8DB',
+                    backgroundColor: '#447788',
                     shadowColor: '#000000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.2,
@@ -133,10 +181,10 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }: EmployerRegis
             {/* Continue Button */}
             <Pressable
               onPress={handleContinue}
-              disabled={!profilePhoto}
+              disabled={!profilePhoto || isUploading}
               className="py-4 rounded-xl active:opacity-90"
               style={{
-                backgroundColor: profilePhoto ? '#00B8DB' : '#d1d5db',
+                backgroundColor: profilePhoto && !isUploading ? '#447788' : '#d1d5db',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: profilePhoto ? 0.2 : 0.1,
@@ -144,13 +192,22 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }: EmployerRegis
                 elevation: profilePhoto ? 6 : 2,
               }}
             >
-              <Text className="text-white text-center font-bold text-base">
-                Continue
-              </Text>
+              {isUploading ? (
+                <View className="flex-row items-center justify-center">
+                  <ActivityIndicator color="#ffffff" size="small" />
+                  <Text className="text-white text-center font-bold text-base ml-2">
+                    Uploading...
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-white text-center font-bold text-base">
+                  Continue
+                </Text>
+              )}
             </Pressable>
 
             {/* Skip Button */}
-            <Pressable onPress={onSkip} className="mt-4">
+            <Pressable onPress={onSkip} className="mt-4" disabled={isUploading}>
               <Text className="text-gray-600 text-center text-sm">
                 Skip for now
               </Text>

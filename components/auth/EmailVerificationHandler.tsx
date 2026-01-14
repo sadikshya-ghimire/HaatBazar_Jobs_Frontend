@@ -78,12 +78,12 @@ const EmailVerificationHandler = ({ onVerified, onError }: EmailVerificationHand
       <View className="bg-white rounded-2xl p-8 items-center" style={{ maxWidth: 400, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 }}>
         {status === 'checking' || status === 'verifying' ? (
           <>
-            <ActivityIndicator size="large" color="#00B8DB" />
+            <ActivityIndicator size="large" color="#447788" />
             <Text className="text-gray-700 text-center mt-4 text-base">{message}</Text>
           </>
         ) : status === 'success' ? (
           <>
-            <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: '#CEFAFE' }}>
+            <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: '#ffffff' }}>
               <Text className="text-4xl">✓</Text>
             </View>
             <Text className="text-xl font-bold text-gray-800 mb-2">Success!</Text>

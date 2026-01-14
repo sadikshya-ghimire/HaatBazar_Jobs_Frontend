@@ -9,6 +9,7 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface EmployerDashboardProps {
   onLogout: () => void;
@@ -207,29 +208,35 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-white px-6 pt-12 pb-6 shadow-sm" style={{ elevation: 4 }}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#447788', '#628BB5', '#B5DBE1']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-6 pt-12 pb-6"
+        style={{ elevation: 4 }}
+      >
         <View className="flex-row justify-between items-center mb-2">
           <View>
-            <Text className="text-gray-600 text-sm">Welcome Back!</Text>
-            <Text className="text-gray-900 text-2xl font-bold mt-1">{employerName}</Text>
+            <Text className="text-white text-sm opacity-90">Welcome Back!</Text>
+            <Text className="text-white text-2xl font-bold mt-1">{employerName}</Text>
           </View>
           <View className="flex-row gap-4">
             <Pressable className="relative">
-              <Ionicons name="notifications-outline" size={28} color="#0092B8" />
+              <Ionicons name="notifications-outline" size={28} color="#ffffff" />
               <View className="absolute -top-1 -right-1 bg-red-500 w-5 h-5 rounded-full items-center justify-center">
                 <Text className="text-white text-xs font-bold">2</Text>
               </View>
             </Pressable>
             <Pressable onPress={() => setShowPostJobModal(true)}>
-              <Ionicons name="add-circle" size={28} color="#00B8DB" />
+              <Ionicons name="add-circle" size={28} color="#ffffff" />
             </Pressable>
             <Pressable onPress={onLogout}>
-              <Ionicons name="log-out-outline" size={28} color="#0092B8" />
+              <Ionicons name="log-out-outline" size={28} color="#ffffff" />
             </Pressable>
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Available Workers Section */}
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -278,13 +285,13 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
 
                   {/* Hourly Rate */}
                   <View className="flex-row items-center mb-4">
-                    <Ionicons name="cash-outline" size={16} color="#00B8DB" />
-                    <Text className="text-[#00B8DB] text-base font-bold ml-2">{worker.hourlyRate}</Text>
+                    <Ionicons name="cash-outline" size={16} color="#447788" />
+                    <Text className="text-[#447788] text-base font-bold ml-2">{worker.hourlyRate}</Text>
                   </View>
 
                   {/* Hire Button */}
                   <Pressable 
-                    className="bg-[#00B8DB] py-3 rounded-xl active:bg-[#0092B8]"
+                    className="bg-[#447788] py-3 rounded-xl active:bg-[#447788]"
                     onPress={() => console.log('Hire worker:', worker.id)}
                   >
                     <Text className="text-white text-center font-bold text-base">Hire Now</Text>
@@ -318,8 +325,8 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
                   {/* Skills Tags */}
                   <View className="flex-row flex-wrap gap-2 mb-3">
                     {job.skills.map((skill, index) => (
-                      <View key={index} className="bg-[#CEFAFE] px-3 py-1 rounded-full">
-                        <Text className="text-[#0092B8] text-xs font-bold">{skill}</Text>
+                      <View key={index} className="bg-[#D5DEEF] px-3 py-1 rounded-full">
+                        <Text className="text-[#447788] text-xs font-bold">{skill}</Text>
                       </View>
                     ))}
                   </View>
@@ -339,7 +346,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
 
                   {/* View Applicants Button */}
                   <Pressable 
-                    className="bg-[#00B8DB] py-3 rounded-xl active:bg-[#0092B8]"
+                    className="bg-[#447788] py-3 rounded-xl active:bg-[#447788]"
                     onPress={() => console.log('View applicants for job:', job.id)}
                   >
                     <Text className="text-white text-center font-bold text-base">View Applicants</Text>
@@ -360,8 +367,8 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
                 >
                   {/* Worker Icon and Name */}
                   <View className="flex-row items-center mb-3">
-                    <View className="w-12 h-12 rounded-full bg-[#CEFAFE] items-center justify-center mr-3">
-                      <Ionicons name="person" size={24} color="#0092B8" />
+                    <View className="w-12 h-12 rounded-full bg-[#D5DEEF] items-center justify-center mr-3">
+                      <Ionicons name="person" size={24} color="#447788" />
                     </View>
                     <View className="flex-1">
                       <Text className="text-gray-900 text-lg font-bold">{worker.name}</Text>
@@ -382,8 +389,8 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
 
                   {/* Rate */}
                   <View className="flex-row items-center mb-3">
-                    <Ionicons name="cash-outline" size={16} color="#00B8DB" />
-                    <Text className="text-[#00B8DB] text-base font-bold ml-2">{worker.rate}</Text>
+                    <Ionicons name="cash-outline" size={16} color="#447788" />
+                    <Text className="text-[#447788] text-base font-bold ml-2">{worker.rate}</Text>
                   </View>
 
                   {/* Hired Date */}
@@ -391,7 +398,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
 
                   {/* Chat Button */}
                   <Pressable 
-                    className="bg-[#00B8DB] py-3 rounded-xl active:bg-[#0092B8] flex-row items-center justify-center"
+                    className="bg-[#447788] py-3 rounded-xl active:bg-[#447788] flex-row items-center justify-center"
                     onPress={() => console.log('Chat with worker:', worker.id)}
                   >
                     <Ionicons name="chatbubbles-outline" size={20} color="#FFFFFF" />
@@ -418,7 +425,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
                 >
                   <View className="flex-row items-center">
                     {/* Avatar */}
-                    <View className="w-12 h-12 rounded-full bg-[#CEFAFE] items-center justify-center mr-3">
+                    <View className="w-12 h-12 rounded-full bg-[#D5DEEF] items-center justify-center mr-3">
                       <Text className="text-2xl">{message.avatar}</Text>
                     </View>
 
@@ -432,7 +439,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
                     <View className="items-end">
                       <Text className="text-gray-500 text-xs mb-2">{message.time}</Text>
                       {message.unreadCount > 0 && (
-                        <View className="bg-[#00B8DB] w-6 h-6 rounded-full items-center justify-center">
+                        <View className="bg-[#447788] w-6 h-6 rounded-full items-center justify-center">
                           <Text className="text-white text-xs font-bold">{message.unreadCount}</Text>
                         </View>
                       )}
@@ -456,8 +463,8 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
             {/* Profile Header */}
             <View className="items-center mb-8">
               {/* Avatar */}
-              <View className="w-24 h-24 rounded-full bg-[#CEFAFE] items-center justify-center mb-4">
-                <Ionicons name="briefcase" size={40} color="#0092B8" />
+              <View className="w-24 h-24 rounded-full bg-[#D5DEEF] items-center justify-center mb-4">
+                <Ionicons name="briefcase" size={40} color="#447788" />
               </View>
               
               {/* Name and Role */}
@@ -561,7 +568,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
             onPress={(e) => e.stopPropagation()}
           >
             {/* Modal Header - Fixed at top */}
-            <View className="bg-[#00B8DB] rounded-t-3xl px-6 py-4 flex-row justify-between items-center">
+            <View className="bg-[#447788] rounded-t-3xl px-6 py-4 flex-row justify-between items-center">
               <Text className="text-white text-xl font-bold">Post a Job</Text>
               <Pressable onPress={() => setShowPostJobModal(false)}>
                 <Ionicons name="close" size={28} color="#FFFFFF" />
@@ -588,7 +595,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
                 <Switch
                   value={isUrgent}
                   onValueChange={setIsUrgent}
-                  trackColor={{ false: '#D1D5DB', true: '#00B8DB' }}
+                  trackColor={{ false: '#D1D5DB', true: '#447788' }}
                   thumbColor={isUrgent ? '#FFFFFF' : '#F3F4F6'}
                 />
               </View>
@@ -625,7 +632,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
                     onPress={() => toggleSkill(skill)}
                     className={`px-4 py-2 rounded-full border ${
                       selectedSkills.includes(skill)
-                        ? 'bg-[#00B8DB] border-[#00B8DB]'
+                        ? 'bg-[#447788] border-[#447788]'
                         : 'bg-white border-gray-300'
                     }`}
                   >
@@ -706,7 +713,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
 
               {/* Buttons */}
               <Pressable
-                className="bg-[#00B8DB] py-4 rounded-xl active:bg-[#0092B8] mb-3"
+                className="bg-[#447788] py-4 rounded-xl active:bg-[#447788] mb-3"
                 onPress={handlePostJob}
               >
                 <Text className="text-white text-center font-bold text-base">Post Job</Text>
@@ -733,9 +740,9 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
             <Ionicons 
               name={selectedTab === 'home' ? 'home' : 'home-outline'} 
               size={24} 
-              color={selectedTab === 'home' ? '#00B8DB' : '#9CA3AF'} 
+              color={selectedTab === 'home' ? '#447788' : '#9CA3AF'} 
             />
-            <Text className={`text-xs mt-1 ${selectedTab === 'home' ? 'text-[#00B8DB] font-bold' : 'text-gray-500'}`}>
+            <Text className={`text-xs mt-1 ${selectedTab === 'home' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
               Home
             </Text>
           </Pressable>
@@ -747,9 +754,9 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
             <Ionicons 
               name={selectedTab === 'myJobs' ? 'briefcase' : 'briefcase-outline'} 
               size={24} 
-              color={selectedTab === 'myJobs' ? '#00B8DB' : '#9CA3AF'} 
+              color={selectedTab === 'myJobs' ? '#447788' : '#9CA3AF'} 
             />
-            <Text className={`text-xs mt-1 ${selectedTab === 'myJobs' ? 'text-[#00B8DB] font-bold' : 'text-gray-500'}`}>
+            <Text className={`text-xs mt-1 ${selectedTab === 'myJobs' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
               My Jobs
             </Text>
           </Pressable>
@@ -762,7 +769,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
               <Ionicons 
                 name={selectedTab === 'messages' ? 'chatbubbles' : 'chatbubbles-outline'} 
                 size={24} 
-                color={selectedTab === 'messages' ? '#00B8DB' : '#9CA3AF'} 
+                color={selectedTab === 'messages' ? '#447788' : '#9CA3AF'} 
               />
               {unreadMessages > 0 && (
                 <View className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full items-center justify-center">
@@ -770,7 +777,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
                 </View>
               )}
             </View>
-            <Text className={`text-xs mt-1 ${selectedTab === 'messages' ? 'text-[#00B8DB] font-bold' : 'text-gray-500'}`}>
+            <Text className={`text-xs mt-1 ${selectedTab === 'messages' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
               Messages
             </Text>
           </Pressable>
@@ -782,9 +789,9 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
             <Ionicons 
               name={selectedTab === 'profile' ? 'person' : 'person-outline'} 
               size={24} 
-              color={selectedTab === 'profile' ? '#00B8DB' : '#9CA3AF'} 
+              color={selectedTab === 'profile' ? '#447788' : '#9CA3AF'} 
             />
-            <Text className={`text-xs mt-1 ${selectedTab === 'profile' ? 'text-[#00B8DB] font-bold' : 'text-gray-500'}`}>
+            <Text className={`text-xs mt-1 ${selectedTab === 'profile' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
               Profile
             </Text>
           </Pressable>

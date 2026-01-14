@@ -41,7 +41,7 @@ const ResetPasswordPage = ({
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
           <View className="flex-row items-center mb-4">
             <Pressable onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#ffffff" />
@@ -85,7 +85,7 @@ const ResetPasswordPage = ({
                 Code sent to {contactInfo || (resetMethod === 'phone' ? 'your phone' : 'your email')}
               </Text>
               <Pressable>
-                <Text className="text-xs font-semibold" style={{ color: '#00B8DB' }}>
+                <Text className="text-xs font-semibold" style={{ color: '#447788' }}>
                   Resend
                 </Text>
               </Pressable>
@@ -146,7 +146,7 @@ const ResetPasswordPage = ({
               onPress={handleResetPassword}
               className="py-4 rounded-xl active:opacity-90"
               style={{
-                backgroundColor: '#00B8DB',
+                backgroundColor: '#447788',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
@@ -162,7 +162,7 @@ const ResetPasswordPage = ({
             {/* Change Contact */}
             <View className="items-center mt-6">
               <Pressable onPress={onChangeContact}>
-                <Text className="text-sm" style={{ color: '#00B8DB' }}>
+                <Text className="text-sm" style={{ color: '#447788' }}>
                   Change {resetMethod === 'phone' ? 'phone number' : 'email'}
                 </Text>
               </Pressable>

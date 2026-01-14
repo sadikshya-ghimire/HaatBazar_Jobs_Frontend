@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { Platform, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { auth } from 'components/config/firebase';
 import { storage } from 'components/utils/storage';
@@ -67,6 +67,20 @@ export default function App() {
   const [signupEmail, setSignupEmail] = useState<string>(''); // Store email for verification page
   const [workerRegistrationData, setWorkerRegistrationData] = useState<WorkerRegistrationData>({});
   const [employerRegistrationData, setEmployerRegistrationData] = useState<EmployerRegistrationData>({});
+
+  // Animation for page transitions - slide effect
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  // Animate on screen change with slide
+  useEffect(() => {
+    slideAnim.setValue(50); // Start from right
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 8,
+    }).start();
+  }, [currentScreen]);
 
   // Check for email verification on app load (web only)
   useEffect(() => {
@@ -245,19 +259,9 @@ export default function App() {
     setUserType(userType);
     setUserName(displayName || 'User');
     
-    if (profileComplete) {
-      // Profile is complete - go directly to dashboard
-      console.log('✅ Profile complete - going to dashboard');
-      setCurrentScreen('dashboard');
-    } else {
-      // Profile incomplete - go to registration
-      console.log('⚠️ Profile incomplete - going to registration');
-      if (userType === 'worker') {
-        setCurrentScreen('workerReg1');
-      } else {
-        setCurrentScreen('employerReg1');
-      }
-    }
+    // Always go to dashboard on login
+    console.log('✅ Going to dashboard');
+    setCurrentScreen('dashboard');
   };
 
   const handleLogout = async () => {
@@ -426,7 +430,9 @@ export default function App() {
 
   return (
     <>
-      {renderScreen()}
+      <Animated.View style={{ flex: 1, transform: [{ translateX: slideAnim }] }}>
+        {renderScreen()}
+      </Animated.View>
       <StatusBar style="auto" />
     </>
   );

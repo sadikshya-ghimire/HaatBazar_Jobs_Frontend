@@ -42,7 +42,7 @@ const WorkerRegistrationStep5 = ({ onBack, onSubmit }: WorkerRegistrationStep5Pr
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center flex-1">
               <Pressable onPress={onBack} className="mr-4">
@@ -164,9 +164,9 @@ const WorkerRegistrationStep5 = ({ onBack, onSubmit }: WorkerRegistrationStep5Pr
                     onPress={() => toggleDay(day)}
                     className="rounded-lg px-4 py-2"
                     style={{
-                      backgroundColor: isSelected ? '#00B8DB' : '#ffffff',
+                      backgroundColor: isSelected ? '#447788' : '#ffffff',
                       borderWidth: 1,
-                      borderColor: isSelected ? '#00B8DB' : '#e5e7eb',
+                      borderColor: isSelected ? '#447788' : '#e5e7eb',
                       shadowColor: '#000000',
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
@@ -191,7 +191,7 @@ const WorkerRegistrationStep5 = ({ onBack, onSubmit }: WorkerRegistrationStep5Pr
               disabled={!isFormValid}
               className="py-4 rounded-xl active:opacity-90"
               style={{
-                backgroundColor: isFormValid ? '#00B8DB' : '#d1d5db',
+                backgroundColor: isFormValid ? '#447788' : '#d1d5db',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: isFormValid ? 0.2 : 0.1,
@@ -205,7 +205,7 @@ const WorkerRegistrationStep5 = ({ onBack, onSubmit }: WorkerRegistrationStep5Pr
             </Pressable>
 
             <View className="mt-6 bg-blue-50 rounded-xl px-4 py-3">
-              <Text className="text-xs text-center" style={{ color: '#00B8DB' }}>
+              <Text className="text-xs text-center" style={{ color: '#447788' }}>
                 Your profile will be reviewed by our admin team within 24-48 hours
               </Text>
             </View>

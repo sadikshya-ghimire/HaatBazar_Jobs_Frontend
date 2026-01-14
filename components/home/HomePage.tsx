@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5, Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface HomePageProps {
   onLogin?: () => void;
@@ -50,8 +51,13 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
-        <View className="px-4 pt-6 pb-8" style={{ backgroundColor: '#00B8DB' }}>
+        {/* Hero Section with Gradient */}
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-4 pt-6 pb-8"
+        >
           {/* Top Navigation */}
           <View className="flex-row justify-end items-center mb-6 gap-2">
             <Pressable 
@@ -65,37 +71,37 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                 elevation: 4,
               }}
             >
-              <Text className="font-semibold text-xs" style={{ color: '#0092B8' }}>
+              <Text className="font-semibold text-xs" style={{ color: '#447788' }}>
                 Home
               </Text>
             </Pressable>
             <Pressable 
               onPress={onLogin}
-              className="px-4 py-1.5 rounded-full active:opacity-80"
+              className="px-4 py-1.5 rounded-full active:opacity-90"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                backgroundColor: '#ffffff',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.12,
+                shadowOpacity: 0.15,
                 shadowRadius: 6,
-                elevation: 3,
+                elevation: 4,
               }}
             >
-              <Text className="text-white font-semibold text-xs">Login</Text>
+              <Text className="font-semibold text-xs" style={{ color: '#447788' }}>Login</Text>
             </Pressable>
             <Pressable 
               onPress={onSignup}
-              className="px-4 py-1.5 rounded-full active:opacity-80"
+              className="px-4 py-1.5 rounded-full active:opacity-90"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                backgroundColor: '#ffffff',
                 shadowColor: '#000000',
                 shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.12,
+                shadowOpacity: 0.15,
                 shadowRadius: 6,
-                elevation: 3,
+                elevation: 4,
               }}
             >
-              <Text className="text-white font-semibold text-xs">Sign Up</Text>
+              <Text className="font-semibold text-xs" style={{ color: '#447788' }}>Sign Up</Text>
             </Pressable>
           </View>
 
@@ -144,7 +150,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                 <Animated.Text
                   className="font-bold text-sm"
                   style={{
-                    color: activeTab === 'workers' ? '#0092B8' : 'rgba(255, 255, 255, 0.7)',
+                    color: activeTab === 'workers' ? '#447788' : 'rgba(255, 255, 255, 0.7)',
                     opacity: workersOpacity,
                   }}
                 >
@@ -159,7 +165,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                 <Animated.Text
                   className="font-bold text-sm"
                   style={{
-                    color: activeTab === 'jobs' ? '#0092B8' : 'rgba(255, 255, 255, 0.7)',
+                    color: activeTab === 'jobs' ? '#447788' : 'rgba(255, 255, 255, 0.7)',
                     opacity: jobsOpacity,
                   }}
                 >
@@ -223,7 +229,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                 elevation: 8,
               }}
             >
-              <Text className="text-center font-bold text-sm" style={{ color: '#0092B8' }}>
+              <Text className="text-center font-bold text-sm" style={{ color: '#447788' }}>
                 {activeTab === 'workers' ? 'Find Workers' : 'Find Jobs'}
               </Text>
             </Pressable>
@@ -233,24 +239,24 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
           <View className="flex-row justify-around">
             <View className="items-center">
               <Text className="text-white text-2xl font-bold">5K+</Text>
-              <Text className="text-xs mt-1" style={{ color: '#CEFAFE' }}>
+              <Text className="text-xs mt-1" style={{ color: '#ffffff' }}>
                 Active Workers
               </Text>
             </View>
             <View className="items-center">
               <Text className="text-white text-2xl font-bold">12K+</Text>
-              <Text className="text-xs mt-1" style={{ color: '#CEFAFE' }}>
+              <Text className="text-xs mt-1" style={{ color: '#ffffff' }}>
                 Jobs Posted
               </Text>
             </View>
             <View className="items-center">
               <Text className="text-white text-2xl font-bold">4.7★</Text>
-              <Text className="text-xs mt-1" style={{ color: '#CEFAFE' }}>
+              <Text className="text-xs mt-1" style={{ color: '#ffffff' }}>
                 Average Rating
               </Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Popular Skills */}
         <View className="px-4 py-6 bg-white">
@@ -282,9 +288,9 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
               >
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mb-2"
-                  style={{ backgroundColor: '#CEFAFE' }}
+                  style={{ backgroundColor: '#ffffff' }}
                 >
-                  <Ionicons name={skill.icon as any} size={20} color="#0092B8" />
+                  <Ionicons name={skill.icon as any} size={20} color="#447788" />
                 </View>
                 <Text className="text-gray-900 text-xs font-medium text-center">
                   {skill.name}
@@ -302,7 +308,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
           </Text>
 
           {/* For Workers */}
-          <Text className="font-bold mb-3 text-sm" style={{ color: '#00B8DB' }}>
+          <Text className="font-bold mb-3 text-sm" style={{ color: '#447788' }}>
             For Workers
           </Text>
 
@@ -348,15 +354,15 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                 <View className="relative mb-2">
                   <View
                     className="w-10 h-10 rounded-full items-center justify-center"
-                    style={{ backgroundColor: '#00B8DB' }}
+                    style={{ backgroundColor: '#447788' }}
                   >
                     <Ionicons name={step.icon as any} size={20} color="#ffffff" />
                   </View>
                   <View
                     className="absolute -top-1 -right-1 w-5 h-5 rounded-full items-center justify-center"
-                    style={{ backgroundColor: '#CEFAFE' }}
+                    style={{ backgroundColor: '#ffffff' }}
                   >
-                    <Text className="font-bold text-xs" style={{ color: '#0092B8' }}>
+                    <Text className="font-bold text-xs" style={{ color: '#447788' }}>
                       {step.number}
                     </Text>
                   </View>
@@ -372,7 +378,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
           </View>
 
           {/* For Employers */}
-          <Text className="font-bold mb-3 text-sm" style={{ color: '#00B8DB' }}>
+          <Text className="font-bold mb-3 text-sm" style={{ color: '#447788' }}>
             For Employers
           </Text>
 
@@ -418,15 +424,15 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                 <View className="relative mb-2">
                   <View
                     className="w-10 h-10 rounded-full items-center justify-center"
-                    style={{ backgroundColor: '#00B8DB' }}
+                    style={{ backgroundColor: '#447788' }}
                   >
                     <Ionicons name={step.icon as any} size={20} color="#ffffff" />
                   </View>
                   <View
                     className="absolute -top-1 -right-1 w-5 h-5 rounded-full items-center justify-center"
-                    style={{ backgroundColor: '#CEFAFE' }}
+                    style={{ backgroundColor: '#ffffff' }}
                   >
-                    <Text className="font-bold text-xs" style={{ color: '#0092B8' }}>
+                    <Text className="font-bold text-xs" style={{ color: '#447788' }}>
                       {step.number}
                     </Text>
                   </View>
@@ -523,7 +529,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                   {worker.verified && (
                     <View
                       className="absolute -top-1 -right-1 w-5 h-5 rounded-full items-center justify-center"
-                      style={{ backgroundColor: '#00B8DB' }}
+                      style={{ backgroundColor: '#447788' }}
                     >
                       <Ionicons name="checkmark" size={12} color="#ffffff" />
                     </View>
@@ -559,7 +565,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
 
                 {/* Rate and Hire Button */}
                 <View className="items-end">
-                  <Text className="font-bold text-xs mb-2" style={{ color: '#00B8DB' }}>
+                  <Text className="font-bold text-xs mb-2" style={{ color: '#447788' }}>
                     {worker.rate}
                   </Text>
                   {worker.available ? (
@@ -567,8 +573,8 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                       onPress={onSignup}
                       className="px-4 py-1.5 rounded-lg active:opacity-90"
                       style={{
-                        backgroundColor: '#00B8DB',
-                        shadowColor: '#00B8DB',
+                        backgroundColor: '#447788',
+                        shadowColor: '#447788',
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: 0.3,
                         shadowRadius: 4,
@@ -593,11 +599,11 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
             className="mt-4 py-2.5 rounded-lg items-center active:opacity-80"
             style={{
               borderWidth: 2,
-              borderColor: '#00B8DB',
-              backgroundColor: '#CEFAFE20',
+              borderColor: '#447788',
+              backgroundColor: '#ffffff20',
             }}
           >
-            <Text className="font-bold text-sm" style={{ color: '#00B8DB' }}>
+            <Text className="font-bold text-sm" style={{ color: '#447788' }}>
               View All Workers
             </Text>
           </Pressable>
@@ -647,9 +653,9 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
               >
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mb-3"
-                  style={{ backgroundColor: '#CEFAFE' }}
+                  style={{ backgroundColor: '#ffffff' }}
                 >
-                  <Ionicons name={feature.icon as any} size={22} color="#00B8DB" />
+                  <Ionicons name={feature.icon as any} size={22} color="#447788" />
                 </View>
                 <Text className="text-gray-900 font-bold text-sm mb-1 text-center">
                   {feature.title}
@@ -662,12 +668,17 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
           </View>
         </View>
 
-        {/* Join HaatBazar Jobs CTA */}
-        <View className="px-4 py-8" style={{ backgroundColor: '#00B8DB' }}>
+        {/* Join HaatBazar Jobs CTA with Gradient */}
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-4 py-8"
+        >
           <Text className="text-white text-xl font-bold text-center mb-2">
             Join HaatBazar Jobs Today
           </Text>
-          <Text className="text-center mb-6 text-xs" style={{ color: '#CEFAFE' }}>
+          <Text className="text-center mb-6 text-xs" style={{ color: '#ffffff' }}>
             Connecting daily wage earners with local job opportunities across Nepal
           </Text>
 
@@ -683,7 +694,7 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
                 elevation: 6,
               }}
             >
-              <Text className="text-center font-bold text-sm" style={{ color: '#0092B8' }}>
+              <Text className="text-center font-bold text-sm" style={{ color: '#447788' }}>
                 Register as Worker
               </Text>
             </Pressable>
@@ -699,10 +710,10 @@ const HomePage = ({ onLogin, onSignup }: HomePageProps) => {
             </Pressable>
           </View>
 
-          <Text className="text-center text-xs mt-4" style={{ color: '#CEFAFE' }}>
+          <Text className="text-center text-xs mt-4" style={{ color: '#ffffff' }}>
             Reducing unemployment, one connection at a time
           </Text>
-        </View>
+        </LinearGradient>
 
         {/* Footer */}
         <View className="bg-gray-900 px-4 py-6">

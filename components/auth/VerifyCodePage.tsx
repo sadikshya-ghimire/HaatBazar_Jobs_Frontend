@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { otpService } from '../services/otpService';
 
@@ -134,17 +135,23 @@ const VerifyCodePage = ({
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#00B8DB' }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
-        {/* Back Button */}
-        <View className="px-6 pt-6">
-          <Pressable onPress={onBack}>
-            <Ionicons name="arrow-back" size={24} color="#ffffff" />
-          </Pressable>
-        </View>
+    <LinearGradient
+      colors={['#447788', '#628BB5', '#B5DBE1']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView className="flex-1">
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          {/* Back Button */}
+          <View className="px-6 pt-6">
+            <Pressable onPress={onBack}>
+              <Ionicons name="arrow-back" size={24} color="#ffffff" />
+            </Pressable>
+          </View>
 
         {/* Content - Centered */}
         <View className="flex-1 items-center justify-center px-6 py-12">
@@ -166,7 +173,7 @@ const VerifyCodePage = ({
           </Text>
 
           {/* Subtitle */}
-          <Text className="text-center mb-8" style={{ color: '#CEFAFE' }}>
+          <Text className="text-center mb-8" style={{ color: '#ffffff' }}>
             We've sent a 6-digit code to{'\n'}
             <Text className="font-semibold">
               {contactInfo ||
@@ -202,7 +209,7 @@ const VerifyCodePage = ({
                   keyboardType="number-pad"
                   maxLength={1}
                   className="text-2xl font-bold text-center w-full"
-                  style={{ color: digit ? '#0092B8' : '#ffffff' }}
+                  style={{ color: digit ? '#447788' : '#ffffff' }}
                   selectTextOnFocus
                   editable={!isVerifying}
                 />
@@ -227,7 +234,7 @@ const VerifyCodePage = ({
           {/* Resend Code */}
           <View className="mb-8">
             {resendTimer > 0 ? (
-              <Text className="text-sm" style={{ color: '#CEFAFE' }}>
+              <Text className="text-sm" style={{ color: '#ffffff' }}>
                 Resend code in {resendTimer}s
               </Text>
             ) : (
@@ -258,13 +265,13 @@ const VerifyCodePage = ({
               disabled={!code.every((d) => d) || isVerifying}
             >
               {isVerifying ? (
-                <ActivityIndicator color="#0092B8" />
+                <ActivityIndicator color="#447788" />
               ) : (
                 <Text
                   className="text-center font-bold text-base"
                   style={{
                     color: code.every((d) => d)
-                      ? '#0092B8'
+                      ? '#447788'
                       : 'rgba(255, 255, 255, 0.5)',
                   }}
                 >
@@ -285,7 +292,8 @@ const VerifyCodePage = ({
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

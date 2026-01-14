@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { sendEmailVerification } from 'firebase/auth';
@@ -86,15 +87,20 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#447788', '#628BB5', '#B5DBE1']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-6 py-6"
+      >
         <View className="flex-row items-center">
           <Pressable onPress={onBack} className="mr-4">
             <Ionicons name="arrow-back" size={24} color="#ffffff" />
           </Pressable>
           <Text className="text-white text-xl font-bold">Verify Your Email</Text>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Content */}
       <View className="flex-1 items-center px-6 py-8">
@@ -102,9 +108,9 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
           {/* Email Icon */}
           <View 
             className="w-24 h-24 rounded-full items-center justify-center mb-6 self-center"
-            style={{ backgroundColor: '#CEFAFE' }}
+            style={{ backgroundColor: '#ffffff' }}
           >
-            <Ionicons name="mail-outline" size={48} color="#00B8DB" />
+            <Ionicons name="mail-outline" size={48} color="#447788" />
           </View>
 
           {/* Title */}
@@ -118,7 +124,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
           
           <Text 
             className="text-lg font-semibold mb-8 text-center"
-            style={{ color: '#00B8DB' }}
+            style={{ color: '#447788' }}
           >
             {email}
           </Text>
@@ -128,7 +134,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
             <View className="flex-row items-start mb-4">
               <View 
                 className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: '#00B8DB' }}
+                style={{ backgroundColor: '#447788' }}
               >
                 <Text className="text-white font-bold">1</Text>
               </View>
@@ -141,7 +147,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
             <View className="flex-row items-start mb-4">
               <View 
                 className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: '#00B8DB' }}
+                style={{ backgroundColor: '#447788' }}
               >
                 <Text className="text-white font-bold">2</Text>
               </View>
@@ -153,7 +159,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
             <View className="flex-row items-start mb-4">
               <View 
                 className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: '#00B8DB' }}
+                style={{ backgroundColor: '#447788' }}
               >
                 <Text className="text-white font-bold">3</Text>
               </View>
@@ -168,13 +174,13 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
             <View 
               className="rounded-xl px-4 py-3 mb-4"
               style={{ 
-                backgroundColor: message.includes('✅') ? '#CEFAFE' : '#fee',
+                backgroundColor: message.includes('✅') ? '#ffffff' : '#fee',
               }}
             >
               <Text 
                 className="text-sm text-center"
                 style={{ 
-                  color: message.includes('✅') ? '#00B8DB' : '#dc2626',
+                  color: message.includes('✅') ? '#447788' : '#dc2626',
                 }}
               >
                 {message}
@@ -188,7 +194,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
             disabled={isChecking}
             className="py-4 rounded-xl mb-4 active:opacity-90"
             style={{
-              backgroundColor: isChecking ? '#d1d5db' : '#00B8DB',
+              backgroundColor: isChecking ? '#d1d5db' : '#447788',
               shadowColor: '#000000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
@@ -224,18 +230,18 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }: EmailVer
                 style={{
                   backgroundColor: '#ffffff',
                   borderWidth: 1,
-                  borderColor: '#00B8DB',
+                  borderColor: '#447788',
                 }}
               >
                 {isResending ? (
                   <View className="flex-row items-center">
-                    <ActivityIndicator color="#00B8DB" size="small" />
-                    <Text className="font-semibold text-sm ml-2" style={{ color: '#00B8DB' }}>
+                    <ActivityIndicator color="#447788" size="small" />
+                    <Text className="font-semibold text-sm ml-2" style={{ color: '#447788' }}>
                       Sending...
                     </Text>
                   </View>
                 ) : (
-                  <Text className="font-semibold text-sm" style={{ color: '#00B8DB' }}>
+                  <Text className="font-semibold text-sm" style={{ color: '#447788' }}>
                     Resend Verification Email
                   </Text>
                 )}

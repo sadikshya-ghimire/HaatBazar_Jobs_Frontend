@@ -72,7 +72,7 @@
 //     <SafeAreaView className="flex-1 bg-gray-50">
 //       <ScrollView showsVerticalScrollIndicator={false}>
 //         {/* Header */}
-//         <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+//         <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
 //           <View className="flex-row items-center mb-4">
 //             <Pressable onPress={onBack} className="mr-4">
 //               <Ionicons name="arrow-back" size={24} color="#ffffff" />
@@ -92,9 +92,9 @@
 //                 onPress={() => setUserType('worker')}
 //                 className="flex-1 py-4 rounded-xl items-center"
 //                 style={{
-//                   backgroundColor: userType === 'worker' ? '#00B8DB' : '#ffffff',
+//                   backgroundColor: userType === 'worker' ? '#447788' : '#ffffff',
 //                   borderWidth: 1,
-//                   borderColor: userType === 'worker' ? '#00B8DB' : '#e5e7eb',
+//                   borderColor: userType === 'worker' ? '#447788' : '#e5e7eb',
 //                   shadowColor: '#000000',
 //                   shadowOffset: { width: 0, height: 2 },
 //                   shadowOpacity: 0.05,
@@ -120,9 +120,9 @@
 //                 onPress={() => setUserType('employer')}
 //                 className="flex-1 py-4 rounded-xl items-center"
 //                 style={{
-//                   backgroundColor: userType === 'employer' ? '#00B8DB' : '#ffffff',
+//                   backgroundColor: userType === 'employer' ? '#447788' : '#ffffff',
 //                   borderWidth: 1,
-//                   borderColor: userType === 'employer' ? '#00B8DB' : '#e5e7eb',
+//                   borderColor: userType === 'employer' ? '#447788' : '#e5e7eb',
 //                   shadowColor: '#000000',
 //                   shadowOffset: { width: 0, height: 2 },
 //                   shadowOpacity: 0.05,
@@ -152,9 +152,9 @@
 //                 onPress={() => setSignUpMethod('phone')}
 //                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
 //                 style={{
-//                   backgroundColor: signUpMethod === 'phone' ? '#00B8DB' : '#ffffff',
+//                   backgroundColor: signUpMethod === 'phone' ? '#447788' : '#ffffff',
 //                   borderWidth: 1,
-//                   borderColor: signUpMethod === 'phone' ? '#00B8DB' : '#e5e7eb',
+//                   borderColor: signUpMethod === 'phone' ? '#447788' : '#e5e7eb',
 //                   shadowColor: '#000000',
 //                   shadowOffset: { width: 0, height: 2 },
 //                   shadowOpacity: 0.05,
@@ -180,9 +180,9 @@
 //                 onPress={() => setSignUpMethod('email')}
 //                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
 //                 style={{
-//                   backgroundColor: signUpMethod === 'email' ? '#00B8DB' : '#ffffff',
+//                   backgroundColor: signUpMethod === 'email' ? '#447788' : '#ffffff',
 //                   borderWidth: 1,
-//                   borderColor: signUpMethod === 'email' ? '#00B8DB' : '#e5e7eb',
+//                   borderColor: signUpMethod === 'email' ? '#447788' : '#e5e7eb',
 //                   shadowColor: '#000000',
 //                   shadowOffset: { width: 0, height: 2 },
 //                   shadowOpacity: 0.05,
@@ -344,16 +344,16 @@
 //                 className="w-5 h-5 rounded mr-3 items-center justify-center"
 //                 style={{
 //                   borderWidth: 2,
-//                   borderColor: agreedToTerms ? '#00B8DB' : '#d1d5db',
-//                   backgroundColor: agreedToTerms ? '#00B8DB' : '#ffffff',
+//                   borderColor: agreedToTerms ? '#447788' : '#d1d5db',
+//                   backgroundColor: agreedToTerms ? '#447788' : '#ffffff',
 //                 }}
 //               >
 //                 {agreedToTerms && <Ionicons name="checkmark" size={14} color="#ffffff" />}
 //               </View>
 //               <Text className="text-gray-600 text-sm flex-1">
 //                 I agree to the{' '}
-//                 <Text style={{ color: '#00B8DB' }}>Terms & Conditions</Text> and{' '}
-//                 <Text style={{ color: '#00B8DB' }}>Privacy Policy</Text>
+//                 <Text style={{ color: '#447788' }}>Terms & Conditions</Text> and{' '}
+//                 <Text style={{ color: '#447788' }}>Privacy Policy</Text>
 //               </Text>
 //             </Pressable>
 
@@ -362,7 +362,7 @@
 //               onPress={handleSignUp}
 //               className="py-4 rounded-xl active:opacity-90"
 //               style={{
-//                 backgroundColor: '#00B8DB',
+//                 backgroundColor: '#447788',
 //                 shadowColor: '#000000',
 //                 shadowOffset: { width: 0, height: 4 },
 //                 shadowOpacity: 0.2,
@@ -386,7 +386,7 @@
 //             <View className="flex-row justify-center">
 //               <Text className="text-gray-600 text-sm">Already have an account? </Text>
 //               <Pressable onPress={onLogin}>
-//                 <Text className="font-bold text-sm" style={{ color: '#00B8DB' }}>
+//                 <Text className="font-bold text-sm" style={{ color: '#447788' }}>
 //                   Login
 //                 </Text>
 //               </Pressable>
@@ -412,6 +412,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { otpService } from "../services/otpService";
 import { userService } from "../services/userService";
@@ -691,8 +692,13 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-6 py-6"
+        >
           <View className="flex-row items-center mb-4">
             <Pressable onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#ffffff" />
@@ -700,7 +706,7 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
             <Text className="text-white text-xl font-bold">Sign Up</Text>
           </View>
           <Text className="text-white text-sm">Join HaatBazar Jobs today</Text>
-        </View>
+        </LinearGradient>
 
         {/* Content */}
         <View className="items-center px-6 py-8">
@@ -712,9 +718,9 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
                 onPress={() => setUserType('worker')}
                 className="flex-1 py-4 rounded-xl items-center"
                 style={{
-                  backgroundColor: userType === 'worker' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: userType === 'worker' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: userType === 'worker' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: userType === 'worker' ? '#447788' : '#e5e7eb',
                   shadowColor: '#000000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.05,
@@ -737,9 +743,9 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
                 onPress={() => setUserType('employer')}
                 className="flex-1 py-4 rounded-xl items-center"
                 style={{
-                  backgroundColor: userType === 'employer' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: userType === 'employer' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: userType === 'employer' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: userType === 'employer' ? '#447788' : '#e5e7eb',
                   shadowColor: '#000000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.05,
@@ -766,9 +772,9 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
                 onPress={() => setSignUpMethod('phone')}
                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
                 style={{
-                  backgroundColor: signUpMethod === 'phone' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: signUpMethod === 'phone' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: signUpMethod === 'phone' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: signUpMethod === 'phone' ? '#447788' : '#e5e7eb',
                 }}
               >
                 <Ionicons name="call" size={18} color={signUpMethod === 'phone' ? '#ffffff' : '#6b7280'} style={{ marginRight: 6 }} />
@@ -779,9 +785,9 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
                 onPress={() => setSignUpMethod('email')}
                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
                 style={{
-                  backgroundColor: signUpMethod === 'email' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: signUpMethod === 'email' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: signUpMethod === 'email' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: signUpMethod === 'email' ? '#447788' : '#e5e7eb',
                 }}
               >
                 <Ionicons name="mail" size={18} color={signUpMethod === 'email' ? '#ffffff' : '#6b7280'} style={{ marginRight: 6 }} />
@@ -918,11 +924,11 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
 
             {/* Terms */}
             <Pressable onPress={() => setAgreedToTerms(!agreedToTerms)} className="flex-row items-start mb-6">
-              <View className="w-5 h-5 rounded mr-3 items-center justify-center" style={{ borderWidth: 2, borderColor: agreedToTerms ? '#00B8DB' : '#d1d5db', backgroundColor: agreedToTerms ? '#00B8DB' : '#ffffff' }}>
+              <View className="w-5 h-5 rounded mr-3 items-center justify-center" style={{ borderWidth: 2, borderColor: agreedToTerms ? '#447788' : '#d1d5db', backgroundColor: agreedToTerms ? '#447788' : '#ffffff' }}>
                 {agreedToTerms && <Ionicons name="checkmark" size={14} color="#ffffff" />}
               </View>
               <Text className="text-gray-600 text-sm flex-1">
-                I agree to the <Text style={{ color: '#00B8DB' }}>Terms & Conditions</Text> and <Text style={{ color: '#00B8DB' }}>Privacy Policy</Text>
+                I agree to the <Text style={{ color: '#447788' }}>Terms & Conditions</Text> and <Text style={{ color: '#447788' }}>Privacy Policy</Text>
               </Text>
             </Pressable>
 
@@ -934,7 +940,7 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
               }}
               disabled={isLoading}
               className="py-4 rounded-xl active:opacity-90 mb-6"
-              style={{ backgroundColor: isLoading ? '#9ca3af' : '#00B8DB', elevation: 6 }}
+              style={{ backgroundColor: isLoading ? '#9ca3af' : '#447788', elevation: 6 }}
             >
               <Text className="text-white text-center font-bold text-base">
                 {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -945,7 +951,7 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
             <View className="flex-row justify-center">
               <Text className="text-gray-600 text-sm">Already have an account? </Text>
               <Pressable onPress={onLogin}>
-                <Text className="font-bold text-sm" style={{ color: '#00B8DB' }}>Login</Text>
+                <Text className="font-bold text-sm" style={{ color: '#447788' }}>Login</Text>
               </Pressable>
             </View>
           </View>

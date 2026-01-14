@@ -33,7 +33,7 @@
 //     <SafeAreaView className="flex-1 bg-gray-50">
 //       <ScrollView showsVerticalScrollIndicator={false}>
 //         {/* Header */}
-//         <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+//         <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
 //           <View className="flex-row items-center mb-4">
 //             <Pressable onPress={onBack} className="mr-4">
 //               <Ionicons name="arrow-back" size={24} color="#ffffff" />
@@ -52,9 +52,9 @@
 //                 onPress={() => setLoginMethod('phone')}
 //                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
 //                 style={{
-//                   backgroundColor: loginMethod === 'phone' ? '#00B8DB' : '#ffffff',
+//                   backgroundColor: loginMethod === 'phone' ? '#447788' : '#ffffff',
 //                   borderWidth: 1,
-//                   borderColor: loginMethod === 'phone' ? '#00B8DB' : '#e5e7eb',
+//                   borderColor: loginMethod === 'phone' ? '#447788' : '#e5e7eb',
 //                   shadowColor: '#000000',
 //                   shadowOffset: { width: 0, height: 2 },
 //                   shadowOpacity: 0.05,
@@ -80,9 +80,9 @@
 //                 onPress={() => setLoginMethod('email')}
 //                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
 //                 style={{
-//                   backgroundColor: loginMethod === 'email' ? '#00B8DB' : '#ffffff',
+//                   backgroundColor: loginMethod === 'email' ? '#447788' : '#ffffff',
 //                   borderWidth: 1,
-//                   borderColor: loginMethod === 'email' ? '#00B8DB' : '#e5e7eb',
+//                   borderColor: loginMethod === 'email' ? '#447788' : '#e5e7eb',
 //                   shadowColor: '#000000',
 //                   shadowOffset: { width: 0, height: 2 },
 //                   shadowOpacity: 0.05,
@@ -189,7 +189,7 @@
 //             {/* Forgot Password */}
 //             <View className="items-end mb-6">
 //               <Pressable onPress={onForgotPassword}>
-//                 <Text className="text-sm" style={{ color: '#00B8DB' }}>
+//                 <Text className="text-sm" style={{ color: '#447788' }}>
 //                   Forgot Password?
 //                 </Text>
 //               </Pressable>
@@ -200,7 +200,7 @@
 //               onPress={handleLogin}
 //               className="py-4 rounded-xl active:opacity-90"
 //               style={{
-//                 backgroundColor: '#00B8DB',
+//                 backgroundColor: '#447788',
 //                 shadowColor: '#000000',
 //                 shadowOffset: { width: 0, height: 4 },
 //                 shadowOpacity: 0.2,
@@ -224,7 +224,7 @@
 //             <View className="flex-row justify-center">
 //               <Text className="text-gray-600 text-sm">Don't have an account? </Text>
 //               <Pressable onPress={onSignUp}>
-//                 <Text className="font-bold text-sm" style={{ color: '#00B8DB' }}>
+//                 <Text className="font-bold text-sm" style={{ color: '#447788' }}>
 //                   Sign Up
 //                 </Text>
 //               </Pressable>
@@ -250,6 +250,7 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase'; 
 import { signInWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
@@ -474,13 +475,18 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
         
         let title = "Login Failed";
         let message = "Unable to login. Please try again.";
+        let buttons: any[] = [{ text: "OK" }];
         
         if (error.code === 'auth/wrong-password') {
           title = "Incorrect Password";
           message = "The password you entered is incorrect. Please try again or use 'Forgot Password' to reset it.";
         } else if (error.code === 'auth/user-not-found') {
-          title = "Email Not Found";
-          message = "No account found with this email address. Please check your email or sign up for a new account.";
+          title = "Email Not Registered";
+          message = "No account found with this email address. Would you like to sign up?";
+          buttons = [
+            { text: "Cancel", style: "cancel" },
+            { text: "Sign Up", onPress: () => onSignUp?.() }
+          ];
         } else if (error.code === 'auth/invalid-email') {
           title = "Invalid Email";
           message = "Please enter a valid email address.";
@@ -492,10 +498,14 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
           message = "Please check your internet connection and try again.";
         } else if (error.code === 'auth/invalid-credential') {
           title = "Incorrect Email or Password";
-          message = "The email or password you entered is incorrect. Please try again.";
+          message = "The email or password you entered is incorrect. Please check and try again.";
+          buttons = [
+            { text: "Try Again" },
+            { text: "Sign Up Instead", onPress: () => onSignUp?.() }
+          ];
         }
         
-        showCustomAlert(title, message);
+        showCustomAlert(title, message, buttons);
       }
     }
   };
@@ -503,8 +513,13 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#00B8DB' }}>
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-6 py-6"
+        >
           <View className="flex-row items-center mb-4">
             <Pressable onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#ffffff" />
@@ -512,7 +527,7 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
             <Text className="text-white text-xl font-bold">Login</Text>
           </View>
           <Text className="text-white text-sm">Welcome back to HaatBazar Jobs</Text>
-        </View>
+        </LinearGradient>
 
         {/* Content */}
         <View className="items-center px-6 py-8">
@@ -523,9 +538,9 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
                 onPress={() => setLoginMethod('phone')}
                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
                 style={{
-                  backgroundColor: loginMethod === 'phone' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: loginMethod === 'phone' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: loginMethod === 'phone' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: loginMethod === 'phone' ? '#447788' : '#e5e7eb',
                 }}
               >
                 <Ionicons name="call" size={18} color={loginMethod === 'phone' ? '#ffffff' : '#6b7280'} style={{ marginRight: 6 }} />
@@ -536,9 +551,9 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
                 onPress={() => setLoginMethod('email')}
                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
                 style={{
-                  backgroundColor: loginMethod === 'email' ? '#00B8DB' : '#ffffff',
+                  backgroundColor: loginMethod === 'email' ? '#447788' : '#ffffff',
                   borderWidth: 1,
-                  borderColor: loginMethod === 'email' ? '#00B8DB' : '#e5e7eb',
+                  borderColor: loginMethod === 'email' ? '#447788' : '#e5e7eb',
                 }}
               >
                 <Ionicons name="mail" size={18} color={loginMethod === 'email' ? '#ffffff' : '#6b7280'} style={{ marginRight: 6 }} />
@@ -582,7 +597,7 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
 
                 <View className="items-end mb-6">
                   <Pressable onPress={onForgotPassword}>
-                    <Text className="text-sm" style={{ color: '#00B8DB' }}>Forgot Password?</Text>
+                    <Text className="text-sm" style={{ color: '#447788' }}>Forgot Password?</Text>
                   </Pressable>
                 </View>
               </>
@@ -622,7 +637,7 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
 
                 <View className="items-end mb-6">
                   <Pressable onPress={onForgotPassword}>
-                    <Text className="text-sm" style={{ color: '#00B8DB' }}>Forgot Password?</Text>
+                    <Text className="text-sm" style={{ color: '#447788' }}>Forgot Password?</Text>
                   </Pressable>
                 </View>
               </>
@@ -633,7 +648,7 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
               onPress={handleLogin}
               disabled={isLoading}
               className="py-4 rounded-xl active:opacity-90 mb-6"
-              style={{ backgroundColor: isLoading ? '#9ca3af' : '#00B8DB', elevation: 6 }}
+              style={{ backgroundColor: isLoading ? '#9ca3af' : '#447788', elevation: 6 }}
             >
               <Text className="text-white text-center font-bold text-base">
                 {isLoading ? 'Logging in...' : 'Login'}
@@ -644,7 +659,7 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }: Login
             <View className="flex-row justify-center">
               <Text className="text-gray-600 text-sm">Don't have an account? </Text>
               <Pressable onPress={onSignUp}>
-                <Text className="font-bold text-sm" style={{ color: '#00B8DB' }}>Sign Up</Text>
+                <Text className="font-bold text-sm" style={{ color: '#447788' }}>Sign Up</Text>
               </Pressable>
             </View>
           </View>
