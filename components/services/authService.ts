@@ -1,13 +1,4 @@
-// FIREBASE DISABLED - Mock authentication service
-// import {
-//   createUserWithEmailAndPassword,
-//   signInWithEmailAndPassword,
-//   signOut,
-//   sendPasswordResetEmail,
-//   updateProfile,
-//   User
-// } from 'firebase/auth';
-// import { auth } from '../config/firebase';
+
 
 // Mock user type
 type MockUser = {
