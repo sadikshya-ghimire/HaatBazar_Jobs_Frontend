@@ -3,26 +3,23 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
+  TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-interface WorkerRegistrationStep5Props {
-  onBack?: () => void;
-  onSubmit?: (data: { address: string; city: string; district: string; availability: string[] }) => void;
-}
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const WorkerRegistrationStep5 = ({ onBack, onSubmit }: WorkerRegistrationStep5Props) => {
+const WorkerRegistrationStep5 = ({ onBack, onSubmit }) => {
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [district, setDistrict] = useState('');
-  const [availability, setAvailability] = useState<string[]>([]);
+  const [availability, setAvailability] = useState([]);
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (day) => {
     if (availability.includes(day)) {
       setAvailability(availability.filter(d => d !== day));
     } else {
@@ -39,181 +36,324 @@ const WorkerRegistrationStep5 = ({ onBack, onSubmit }: WorkerRegistrationStep5Pr
   const isFormValid = address && city && district && availability.length > 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center flex-1">
-              <Pressable onPress={onBack} className="mr-4">
-                <Ionicons name="arrow-back" size={24} color="#ffffff" />
-              </Pressable>
-              <Text className="text-white text-xl font-bold">Worker Registration</Text>
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#2c3e50', '#34495e', '#3d5a6c']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onBack} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Worker Registration</Text>
+            <View style={styles.placeholder} />
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressText}>Step 5 of 5</Text>
+              <Text style={styles.progressText}>100%</Text>
+            </View>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: '100%' }]} />
             </View>
           </View>
 
-          {/* Progress */}
-          <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-white text-sm">Step 5 of 5</Text>
-            <Text className="text-white text-sm">100%</Text>
-          </View>
-          <View className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
-            <View 
-              className="h-full rounded-full"
-              style={{ 
-                width: '100%',
-                backgroundColor: '#ffffff'
-              }}
-            />
-          </View>
-        </View>
-
-        {/* Content */}
-        <View className="items-center px-6 py-8">
-          <View className="w-full" style={{ maxWidth: 500 }}>
-            {/* Title */}
-            <Text className="text-gray-900 text-2xl font-bold mb-2">Location & Availability</Text>
-            <Text className="text-gray-600 text-sm mb-8">
+          {/* Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Location & Availability</Text>
+            <Text style={styles.cardSubtitle}>
               Let employers know where you work and when you're available
             </Text>
 
             {/* Address */}
-            <Text className="text-gray-700 text-sm mb-2">Street Address</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="location-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="Enter your street address"
-                value={address}
-                onChangeText={setAddress}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Street Address</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="location-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Enter your street address"
+                  value={address}
+                  onChangeText={setAddress}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                />
+              </View>
             </View>
 
             {/* City */}
-            <Text className="text-gray-700 text-sm mb-2">City</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="business-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="Enter your city"
-                value={city}
-                onChangeText={setCity}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>City</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="business-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Enter your city"
+                  value={city}
+                  onChangeText={setCity}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                />
+              </View>
             </View>
 
             {/* District */}
-            <Text className="text-gray-700 text-sm mb-2">District</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 mb-6"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Pressable
-                onPress={() => {
-                  // In a real app, this would open a picker
-                  setDistrict('Kathmandu');
-                }}
-                className="flex-row items-center justify-between"
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>District</Text>
+              <TouchableOpacity
+                onPress={() => setDistrict('Kathmandu')}
+                style={styles.inputContainer}
+                activeOpacity={0.7}
               >
-                <Text className={district ? 'text-gray-700' : 'text-gray-400'}>
+                <Ionicons name="map-outline" size={20} color="#94a3b8" />
+                <Text style={[styles.inputText, !district && styles.inputPlaceholder]}>
                   {district || 'Select district'}
                 </Text>
-                <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-              </Pressable>
+                <Ionicons name="chevron-down" size={20} color="#94a3b8" />
+              </TouchableOpacity>
             </View>
 
             {/* Availability */}
-            <Text className="text-gray-700 text-sm mb-3">Available Days</Text>
-            <View className="flex-row flex-wrap gap-2 mb-8">
-              {DAYS.map((day) => {
-                const isSelected = availability.includes(day);
-                return (
-                  <Pressable
-                    key={day}
-                    onPress={() => toggleDay(day)}
-                    className="rounded-lg px-4 py-2"
-                    style={{
-                      backgroundColor: isSelected ? '#447788' : '#ffffff',
-                      borderWidth: 1,
-                      borderColor: isSelected ? '#447788' : '#e5e7eb',
-                      shadowColor: '#000000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  >
-                    <Text
-                      className="font-semibold text-xs"
-                      style={{ color: isSelected ? '#ffffff' : '#6b7280' }}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Available Days</Text>
+              <View style={styles.daysGrid}>
+                {DAYS.map((day) => {
+                  const isSelected = availability.includes(day);
+                  return (
+                    <TouchableOpacity
+                      key={day}
+                      onPress={() => toggleDay(day)}
+                      style={[
+                        styles.dayChip,
+                        isSelected && styles.dayChipSelected
+                      ]}
+                      activeOpacity={0.7}
                     >
-                      {day}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text style={[
+                        styles.dayText,
+                        isSelected && styles.dayTextSelected
+                      ]}>
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
             {/* Submit Button */}
-            <Pressable
+            <TouchableOpacity
               onPress={handleSubmit}
               disabled={!isFormValid}
-              className="py-4 rounded-xl active:opacity-90"
-              style={{
-                backgroundColor: isFormValid ? '#447788' : '#d1d5db',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isFormValid ? 0.2 : 0.1,
-                shadowRadius: 8,
-                elevation: isFormValid ? 6 : 2,
-              }}
+              style={[styles.submitButton, !isFormValid && styles.submitButtonDisabled]}
+              activeOpacity={0.8}
             >
-              <Text className="text-white text-center font-bold text-base">
-                Submit for Verification
-              </Text>
-            </Pressable>
+              <View style={styles.buttonContent}>
+                <Text style={styles.submitButtonText}>Submit for Verification</Text>
+                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              </View>
+            </TouchableOpacity>
 
-            <View className="mt-6 bg-blue-50 rounded-xl px-4 py-3">
-              <Text className="text-xs text-center" style={{ color: '#447788' }}>
-                Your profile will be reviewed by our admin team within 24-48 hours
+            {/* Info Badge */}
+            <View style={styles.infoBadge}>
+              <Ionicons name="information-circle" size={16} color="#10b981" />
+              <Text style={styles.infoText}>
+                Your profile will be reviewed within 24-48 hours
               </Text>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 32,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  placeholder: {
+    width: 40,
+  },
+  progressContainer: {
+    marginBottom: 40,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#10b981',
+    borderRadius: 3,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    lineHeight: 20,
+    marginBottom: 32,
+  },
+  inputGroup: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  inputText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  inputPlaceholder: {
+    color: '#cbd5e1',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  dayChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#f8fafc',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  dayChipSelected: {
+    backgroundColor: '#1e293b',
+    borderColor: '#1e293b',
+  },
+  dayText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  dayTextSelected: {
+    color: '#fff',
+  },
+  submitButton: {
+    width: '100%',
+    backgroundColor: '#10b981',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  infoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d1fae5',
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#059669',
+    lineHeight: 16,
+  },
+});
 
 export default WorkerRegistrationStep5;

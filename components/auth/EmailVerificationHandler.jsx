@@ -4,13 +4,8 @@ import { auth } from '../config/firebase';
 import { applyActionCode } from 'firebase/auth';
 import { storage } from '../utils/storage';
 
-interface EmailVerificationHandlerProps {
-  onVerified: (userType: 'worker' | 'employer') => void;
-  onError: () => void;
-}
-
-const EmailVerificationHandler = ({ onVerified, onError }: EmailVerificationHandlerProps) => {
-  const [status, setStatus] = useState<'checking' | 'verifying' | 'success' | 'error'>('checking');
+const EmailVerificationHandler = ({ onVerified, onError }) => {
+  const [status, setStatus] = useState('checking');
   const [message, setMessage] = useState('Checking verification status...');
 
   useEffect(() => {
@@ -37,7 +32,7 @@ const EmailVerificationHandler = ({ onVerified, onError }: EmailVerificationHand
 
           // Wait a moment then redirect
           setTimeout(async () => {
-            const userType = await storage.getItem('pendingUserType') as 'worker' | 'employer' || 'worker';
+            const userType = await storage.getItem('pendingUserType') || 'worker';
             onVerified(userType);
           }, 2000);
           return;
@@ -52,7 +47,7 @@ const EmailVerificationHandler = ({ onVerified, onError }: EmailVerificationHand
           setStatus('success');
           setMessage('Email already verified! Redirecting...');
           setTimeout(async () => {
-            const userType = await storage.getItem('pendingUserType') as 'worker' | 'employer' || 'worker';
+            const userType = await storage.getItem('pendingUserType') || 'worker';
             onVerified(userType);
           }, 1500);
         } else {
@@ -65,7 +60,7 @@ const EmailVerificationHandler = ({ onVerified, onError }: EmailVerificationHand
         setMessage('No user found. Please sign up first.');
         setTimeout(onError, 2000);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Email verification error:', error);
       setStatus('error');
       setMessage('Verification failed. Please try again.');
@@ -75,7 +70,7 @@ const EmailVerificationHandler = ({ onVerified, onError }: EmailVerificationHand
 
   return (
     <View className="flex-1 justify-center items-center bg-gray-50 px-6">
-      <View className="bg-white rounded-2xl p-8 items-center" style={{ maxWidth: 400, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 }}>
+      <View className="bg-white rounded-2xl p-8 items-center" style={{ maxWidth: 400, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 }}>
         {status === 'checking' || status === 'verifying' ? (
           <>
             <ActivityIndicator size="large" color="#447788" />

@@ -1,12 +1,7 @@
 import React, { useRef } from 'react';
-import { Pressable, Animated, PressableProps } from 'react-native';
+import { Pressable, Animated } from 'react-native';
 
-interface AnimatedButtonProps extends PressableProps {
-  children: React.ReactNode;
-  scale?: number;
-}
-
-export const AnimatedButton: React.FC<AnimatedButtonProps> = ({ 
+export const AnimatedButton = ({ 
   children, 
   scale = 0.95,
   onPress,
@@ -18,8 +13,8 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
     Animated.spring(scaleAnim, {
       toValue: scale,
       useNativeDriver: true,
-      tension: 300,
-      friction: 10,
+      tension: 100,
+      friction: 3,
     }).start();
   };
 
@@ -27,8 +22,8 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
-      tension: 300,
-      friction: 10,
+      tension: 100,
+      friction: 3,
     }).start();
   };
 

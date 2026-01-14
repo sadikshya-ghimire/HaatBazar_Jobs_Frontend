@@ -2,12 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-interface LoadingSpinnerProps {
-  size?: number;
-  color?: string;
-}
-
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
+export const LoadingSpinner = ({ 
   size = 40, 
   color = '#447788' 
 }) => {
@@ -22,7 +17,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         useNativeDriver: true,
       })
     ).start();
-  }, []);
+  }, [spinValue]);
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],

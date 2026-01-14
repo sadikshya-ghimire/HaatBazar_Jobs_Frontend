@@ -10,17 +10,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-interface WorkerDashboardProps {
-  onLogout: () => void;
-  userName?: string;
-}
-
-export default function WorkerDashboard({ onLogout, userName = 'Rajesh' }: WorkerDashboardProps) {
-  const [selectedTab, setSelectedTab] = useState<'home' | 'myJobs' | 'messages' | 'profile'>('home');
+export default function WorkerDashboard({ onLogout, userName = 'Rajesh' }) {
+  const [selectedTab, setSelectedTab] = useState('home');
   const [showPostOfferModal, setShowPostOfferModal] = useState(false);
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState([]);
   const [location, setLocation] = useState('');
   const [district, setDistrict] = useState('');
   const [rate, setRate] = useState('');
@@ -133,7 +128,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Rajesh' }: Worke
     'Cook', 'Security Guard', 'Babysitter',
   ];
 
-  const toggleSkill = (skill: string) => {
+  const toggleSkill = (skill) => {
     if (selectedSkills.includes(skill)) {
       setSelectedSkills(selectedSkills.filter(s => s !== skill));
     } else {

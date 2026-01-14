@@ -3,30 +3,18 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
+  TouchableOpacity,
   SafeAreaView,
   ScrollView,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { profileService } from '../services/profileService';
 
-interface EmployerRegistrationStep3Props {
-  onBack?: () => void;
-  onSubmit?: (data: { 
-    fullName: string; 
-    phoneNumber: string; 
-    email: string; 
-    companyName: string; 
-    address: string; 
-    city: string; 
-    district: string; 
-  }) => void;
-}
-
-const EmployerRegistrationStep3 = ({ onBack, onSubmit }: EmployerRegistrationStep3Props) => {
+const EmployerRegistrationStep3 = ({ onBack, onSubmit }) => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -78,284 +66,347 @@ const EmployerRegistrationStep3 = ({ onBack, onSubmit }: EmployerRegistrationSte
   const isFormValid = fullName && phoneNumber && address && city && district;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={['#447788', '#628BB5', '#B5DBE1']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="px-6 py-6"
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#2c3e50', '#34495e', '#3d5a6c']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center flex-1">
-              <Pressable onPress={onBack} className="mr-4" disabled={isSaving}>
-                <Ionicons name="arrow-back" size={24} color="#ffffff" />
-              </Pressable>
-              <Text className="text-white text-xl font-bold">Employer Registration</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onBack} style={styles.backButton} disabled={isSaving}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Employer Registration</Text>
+            <View style={styles.placeholder} />
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressText}>Step 3 of 3</Text>
+              <Text style={styles.progressText}>100%</Text>
+            </View>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: '100%' }]} />
             </View>
           </View>
 
-          {/* Progress */}
-          <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-white text-sm">Step 3 of 3</Text>
-            <Text className="text-white text-sm">100%</Text>
-          </View>
-          <View className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
-            <View 
-              className="h-full rounded-full"
-              style={{ 
-                width: '100%',
-                backgroundColor: '#ffffff'
-              }}
-            />
-          </View>
-        </LinearGradient>
-
-        {/* Content */}
-        <View className="items-center px-6 py-8">
-          <View className="w-full" style={{ maxWidth: 500 }}>
-            {/* Title */}
-            <Text className="text-gray-900 text-2xl font-bold mb-2">Personal Information</Text>
-            <Text className="text-gray-600 text-sm mb-8">
+          {/* Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Personal Information</Text>
+            <Text style={styles.cardSubtitle}>
               Provide your contact details and location information
             </Text>
 
             {/* Full Name */}
-            <Text className="text-gray-700 text-sm mb-2">Full Name</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="person-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="Enter your full name"
-                value={fullName}
-                onChangeText={setFullName}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-                editable={!isSaving}
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="person-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  editable={!isSaving}
+                />
+              </View>
             </View>
 
             {/* Phone Number */}
-            <Text className="text-gray-700 text-sm mb-2">Phone Number</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="call-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="98XXXXXXXX"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-                keyboardType="phone-pad"
-                editable={!isSaving}
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="call-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="98XXXXXXXX"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  keyboardType="phone-pad"
+                  editable={!isSaving}
+                />
+              </View>
             </View>
 
             {/* Email Address */}
-            <Text className="text-gray-700 text-sm mb-2">Email Address</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="mail-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="Enter your email address"
-                value={email}
-                onChangeText={setEmail}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!isSaving}
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email Address (Optional)</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="your@email.com"
+                  value={email}
+                  onChangeText={setEmail}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isSaving}
+                />
+              </View>
             </View>
 
-            {/* Company Name (Optional) */}
-            <Text className="text-gray-700 text-sm mb-2">Company Name (Optional)</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="business-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="Enter company name if applicable"
-                value={companyName}
-                onChangeText={setCompanyName}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-                editable={!isSaving}
-              />
+            {/* Company Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Company Name (Optional)</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="business-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Enter company name"
+                  value={companyName}
+                  onChangeText={setCompanyName}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  editable={!isSaving}
+                />
+              </View>
             </View>
 
             {/* Address */}
-            <Text className="text-gray-700 text-sm mb-2">Street Address</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="location-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="Enter your street address"
-                value={address}
-                onChangeText={setAddress}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-                editable={!isSaving}
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Street Address</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="location-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Enter your street address"
+                  value={address}
+                  onChangeText={setAddress}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  editable={!isSaving}
+                />
+              </View>
             </View>
 
             {/* City */}
-            <Text className="text-gray-700 text-sm mb-2">City</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Ionicons name="business-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="e.g., Kathmandu"
-                value={city}
-                onChangeText={setCity}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-                editable={!isSaving}
-              />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>City</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="business-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="e.g., Kathmandu"
+                  value={city}
+                  onChangeText={setCity}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  editable={!isSaving}
+                />
+              </View>
             </View>
 
             {/* District */}
-            <Text className="text-gray-700 text-sm mb-2">District</Text>
-            <View
-              className="bg-white rounded-xl px-4 py-4 mb-8"
-              style={{
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Pressable
-                onPress={() => {
-                  if (!isSaving) setDistrict('Kathmandu');
-                }}
-                className="flex-row items-center justify-between"
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>District</Text>
+              <TouchableOpacity
+                onPress={() => !isSaving && setDistrict('Kathmandu')}
+                style={styles.inputContainer}
                 disabled={isSaving}
+                activeOpacity={0.7}
               >
-                <Text className={district ? 'text-gray-700' : 'text-gray-400'}>
-                  {district || 'e.g., Kathmandu'}
+                <Ionicons name="map-outline" size={20} color="#94a3b8" />
+                <Text style={[styles.inputText, !district && styles.inputPlaceholder]}>
+                  {district || 'Select district'}
                 </Text>
-                <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-              </Pressable>
+                <Ionicons name="chevron-down" size={20} color="#94a3b8" />
+              </TouchableOpacity>
             </View>
 
             {/* Submit Button */}
-            <Pressable
+            <TouchableOpacity
               onPress={handleSubmit}
               disabled={!isFormValid || isSaving}
-              className="py-4 rounded-xl active:opacity-90 mb-3"
-              style={{
-                backgroundColor: isFormValid && !isSaving ? '#447788' : '#d1d5db',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isFormValid ? 0.2 : 0.1,
-                shadowRadius: 8,
-                elevation: isFormValid ? 6 : 2,
-              }}
+              style={[styles.submitButton, (!isFormValid || isSaving) && styles.submitButtonDisabled]}
+              activeOpacity={0.8}
             >
               {isSaving ? (
-                <View className="flex-row items-center justify-center">
+                <View style={styles.buttonContent}>
                   <ActivityIndicator color="#ffffff" size="small" />
-                  <Text className="text-white text-center font-bold text-base ml-2">
-                    Saving...
-                  </Text>
+                  <Text style={styles.submitButtonText}>Saving...</Text>
                 </View>
               ) : (
-                <Text className="text-white text-center font-bold text-base">
-                  Complete Registration
-                </Text>
+                <View style={styles.buttonContent}>
+                  <Text style={styles.submitButtonText}>Complete Registration</Text>
+                  <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                </View>
               )}
-            </Pressable>
+            </TouchableOpacity>
 
-            {/* Back Button */}
-            <Pressable 
-              onPress={onBack}
-              className="py-3 rounded-xl"
-              style={{
-                backgroundColor: '#ffffff',
-                borderWidth: 1,
-                borderColor: '#e5e7eb',
-              }}
-              disabled={isSaving}
-            >
-              <Text className="text-gray-700 text-center font-semibold text-base">
-                Back
-              </Text>
-            </Pressable>
-
-            <View className="mt-6 bg-blue-50 rounded-xl px-4 py-3">
-              <Text className="text-xs text-center" style={{ color: '#447788' }}>
-                Your profile will be reviewed by our admin team within 24-48 hours
+            {/* Info Badge */}
+            <View style={styles.infoBadge}>
+              <Ionicons name="information-circle" size={16} color="#10b981" />
+              <Text style={styles.infoText}>
+                Your information will be verified within 24-48 hours
               </Text>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 32,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  placeholder: {
+    width: 40,
+  },
+  progressContainer: {
+    marginBottom: 40,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#10b981',
+    borderRadius: 3,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    lineHeight: 20,
+    marginBottom: 32,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  inputText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  inputPlaceholder: {
+    color: '#cbd5e1',
+  },
+  submitButton: {
+    width: '100%',
+    backgroundColor: '#10b981',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    marginTop: 12,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  infoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d1fae5',
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#059669',
+    lineHeight: 16,
+  },
+});
 
 export default EmployerRegistrationStep3;

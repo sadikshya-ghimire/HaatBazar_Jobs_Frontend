@@ -7,23 +7,17 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-interface ForgotPasswordPageProps {
-  onBack?: () => void;
-  onBackToLogin?: () => void;
-  onSendCode?: (method: 'phone' | 'email', contact: string) => void;
-}
-
-const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswordPageProps) => {
-  const [resetMethod, setResetMethod] = useState<'phone' | 'email'>('phone');
+const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }) => {
+  const [resetMethod, setResetMethod] = useState('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
 
   const handleSendCode = () => {
-    // Handle send code logic
     const contact = resetMethod === 'phone' ? phoneNumber : email;
-    if (onSendCode) {
+    if (contact) {
       onSendCode(resetMethod, contact);
     }
   };
@@ -31,8 +25,12 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-6 py-6"
+        >
           <View className="flex-row items-center mb-4">
             <Pressable onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#ffffff" />
@@ -40,12 +38,10 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
             <Text className="text-white text-xl font-bold">Forgot Password</Text>
           </View>
           <Text className="text-white text-sm">We'll send you a reset code</Text>
-        </View>
+        </LinearGradient>
 
-        {/* Content - Centered Card */}
         <View className="items-center px-6 py-8">
           <View className="w-full" style={{ maxWidth: 500 }}>
-            {/* Reset Method */}
             <Text className="text-gray-700 text-sm mb-3">Send reset code via:</Text>
             <View className="flex-row gap-3 mb-6">
               <Pressable
@@ -55,7 +51,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
                   backgroundColor: resetMethod === 'phone' ? '#447788' : '#ffffff',
                   borderWidth: 1,
                   borderColor: resetMethod === 'phone' ? '#447788' : '#e5e7eb',
-                  shadowColor: '#000000',
+                  shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.05,
                   shadowRadius: 4,
@@ -83,7 +79,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
                   backgroundColor: resetMethod === 'email' ? '#447788' : '#ffffff',
                   borderWidth: 1,
                   borderColor: resetMethod === 'email' ? '#447788' : '#e5e7eb',
-                  shadowColor: '#000000',
+                  shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.05,
                   shadowRadius: 4,
@@ -105,7 +101,6 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
               </Pressable>
             </View>
 
-            {/* Phone Number or Email */}
             {resetMethod === 'phone' ? (
               <>
                 <Text className="text-gray-700 text-sm mb-2">Phone Number</Text>
@@ -114,7 +109,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
                   style={{
                     borderWidth: 1,
                     borderColor: '#e5e7eb',
-                    shadowColor: '#000000',
+                    shadowColor: '#000',
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.05,
                     shadowRadius: 2,
@@ -143,7 +138,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
                   style={{
                     borderWidth: 1,
                     borderColor: '#e5e7eb',
-                    shadowColor: '#000000',
+                    shadowColor: '#000',
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.05,
                     shadowRadius: 2,
@@ -167,13 +162,12 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
               </>
             )}
 
-            {/* Send Code Button */}
             <Pressable
               onPress={handleSendCode}
               className="py-4 rounded-xl active:opacity-90 flex-row items-center justify-center"
               style={{
                 backgroundColor: '#447788',
-                shadowColor: '#000000',
+                shadowColor: '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
                 shadowRadius: 8,
@@ -186,7 +180,6 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }: ForgotPasswor
               </Text>
             </Pressable>
 
-            {/* Back to Login */}
             <View className="items-center mt-8">
               <Pressable onPress={onBackToLogin} className="flex-row items-center">
                 <Ionicons name="arrow-back" size={16} color="#6b7280" style={{ marginRight: 6 }} />

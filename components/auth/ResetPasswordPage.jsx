@@ -7,31 +7,22 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-
-interface ResetPasswordPageProps {
-  onBack?: () => void;
-  onBackToLogin?: () => void;
-  onResetSuccess?: () => void;
-  onChangeContact?: () => void;
-  contactInfo?: string;
-  resetMethod?: 'phone' | 'email';
-}
 
 const ResetPasswordPage = ({ 
   onBack, 
   onBackToLogin, 
   onResetSuccess,
   onChangeContact,
-  contactInfo = '',
-  resetMethod = 'phone'
-}: ResetPasswordPageProps) => {
+  contactInfo,
+  resetMethod
+}) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleResetPassword = () => {
-    // Handle reset password logic
     if (onResetSuccess) {
       onResetSuccess();
     }
@@ -40,28 +31,30 @@ const ResetPasswordPage = ({
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
+        <LinearGradient
+          colors={['#447788', '#628BB5', '#B5DBE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-6 py-6"
+        >
           <View className="flex-row items-center mb-4">
             <Pressable onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#ffffff" />
             </Pressable>
-            <Text className="text-white text-xl font-bold">Forgot Password</Text>
+            <Text className="text-white text-xl font-bold">Reset Password</Text>
           </View>
           <Text className="text-white text-sm">Enter the code sent to you</Text>
-        </View>
+        </LinearGradient>
 
-        {/* Content - Centered Card */}
         <View className="items-center px-6 py-8">
           <View className="w-full" style={{ maxWidth: 500 }}>
-            {/* Verification Code */}
             <Text className="text-gray-700 text-sm mb-2">Verification Code</Text>
             <View
               className="bg-white rounded-xl px-4 py-4 mb-2"
               style={{
                 borderWidth: 1,
                 borderColor: '#e5e7eb',
-                shadowColor: '#000000',
+                shadowColor: '#000',
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.05,
                 shadowRadius: 2,
@@ -79,7 +72,6 @@ const ResetPasswordPage = ({
               />
             </View>
             
-            {/* Code sent info and Resend */}
             <View className="flex-row justify-between items-center mb-6">
               <Text className="text-gray-500 text-xs">
                 Code sent to {contactInfo || (resetMethod === 'phone' ? 'your phone' : 'your email')}
@@ -91,14 +83,13 @@ const ResetPasswordPage = ({
               </Pressable>
             </View>
 
-            {/* New Password */}
             <Text className="text-gray-700 text-sm mb-2">New Password</Text>
             <View
               className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
               style={{
                 borderWidth: 1,
                 borderColor: '#e5e7eb',
-                shadowColor: '#000000',
+                shadowColor: '#000',
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.05,
                 shadowRadius: 2,
@@ -116,14 +107,13 @@ const ResetPasswordPage = ({
               />
             </View>
 
-            {/* Confirm New Password */}
             <Text className="text-gray-700 text-sm mb-2">Confirm New Password</Text>
             <View
               className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-6"
               style={{
                 borderWidth: 1,
                 borderColor: '#e5e7eb',
-                shadowColor: '#000000',
+                shadowColor: '#000',
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.05,
                 shadowRadius: 2,
@@ -141,13 +131,12 @@ const ResetPasswordPage = ({
               />
             </View>
 
-            {/* Reset Password Button */}
             <Pressable
               onPress={handleResetPassword}
               className="py-4 rounded-xl active:opacity-90"
               style={{
                 backgroundColor: '#447788',
-                shadowColor: '#000000',
+                shadowColor: '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
                 shadowRadius: 8,
@@ -159,7 +148,6 @@ const ResetPasswordPage = ({
               </Text>
             </Pressable>
 
-            {/* Change Contact */}
             <View className="items-center mt-6">
               <Pressable onPress={onChangeContact}>
                 <Text className="text-sm" style={{ color: '#447788' }}>
@@ -168,7 +156,6 @@ const ResetPasswordPage = ({
               </Pressable>
             </View>
 
-            {/* Back to Login */}
             <View className="items-center mt-4">
               <Pressable onPress={onBackToLogin} className="flex-row items-center">
                 <Ionicons name="arrow-back" size={16} color="#6b7280" style={{ marginRight: 6 }} />

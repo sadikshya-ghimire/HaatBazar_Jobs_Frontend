@@ -1,422 +1,18 @@
-// import React, { useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   TextInput,
-//   Pressable,
-//   SafeAreaView,
-//   ScrollView,
-// } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
-// import { otpService } from "../services/otpService";
-
-
-// interface SignUpPageProps {
-//   onBack?: () => void;
-//   onLogin?: () => void;
-//   onSignUpSuccess?: (userType: 'worker' | 'employer', method: 'phone' | 'email', contact: string) => void;
-// }
-
-// const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
-//   const [userType, setUserType] = useState<'worker' | 'employer'>('worker');
-//   const [signUpMethod, setSignUpMethod] = useState<'phone' | 'email'>('phone');
-//   const [fullName, setFullName] = useState('');
-//   const [phoneNumber, setPhoneNumber] = useState('');
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-//   const [confirmPassword, setConfirmPassword] = useState('');
-//   const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-// const handleSignUp = async () => {
-//   if (!agreedToTerms) {
-//     alert("Please agree to the terms and conditions");
-//     return;
-//   }
-
-//   if (!fullName) {
-//     alert("Please enter your full name");
-//     return;
-//   }
-
-//   if (signUpMethod === "phone") {
-//     if (!phoneNumber) {
-//       alert("Please enter phone number");
-//       return;
-//     }
-
-//     // Nepal formatting
-//     const formattedPhone = phoneNumber.startsWith("+")
-//       ? phoneNumber
-//       : `+977${phoneNumber}`;
-
-//     const result = await otpService.sendOTP(formattedPhone);
-
-//     if (result.success) {
-//       onSignUpSuccess?.(
-//         userType,
-//         "phone",
-//         formattedPhone
-//       );
-//     } else {
-//       alert(result.message || "Failed to send OTP");
-//     }
-//   }
-
-//   if (signUpMethod === "email") {
-//     alert("Email signup will be added next");
-//   }
-// };
-
-
-//   return (
-//     <SafeAreaView className="flex-1 bg-gray-50">
-//       <ScrollView showsVerticalScrollIndicator={false}>
-//         {/* Header */}
-//         <View className="px-6 py-6" style={{ backgroundColor: '#447788' }}>
-//           <View className="flex-row items-center mb-4">
-//             <Pressable onPress={onBack} className="mr-4">
-//               <Ionicons name="arrow-back" size={24} color="#ffffff" />
-//             </Pressable>
-//             <Text className="text-white text-xl font-bold">Sign Up</Text>
-//           </View>
-//           <Text className="text-white text-sm">Join HaatBazar Jobs today</Text>
-//         </View>
-
-//         {/* Content - Centered Card */}
-//         <View className="items-center px-6 py-8">
-//           <View className="w-full" style={{ maxWidth: 500 }}>
-//             {/* User Type Selection */}
-//             <Text className="text-gray-700 text-sm mb-3">I want to:</Text>
-//             <View className="flex-row gap-3 mb-6">
-//               <Pressable
-//                 onPress={() => setUserType('worker')}
-//                 className="flex-1 py-4 rounded-xl items-center"
-//                 style={{
-//                   backgroundColor: userType === 'worker' ? '#447788' : '#ffffff',
-//                   borderWidth: 1,
-//                   borderColor: userType === 'worker' ? '#447788' : '#e5e7eb',
-//                   shadowColor: '#000000',
-//                   shadowOffset: { width: 0, height: 2 },
-//                   shadowOpacity: 0.05,
-//                   shadowRadius: 4,
-//                   elevation: 2,
-//                 }}
-//               >
-//                 <Ionicons
-//                   name="briefcase"
-//                   size={24}
-//                   color={userType === 'worker' ? '#ffffff' : '#9ca3af'}
-//                   style={{ marginBottom: 4 }}
-//                 />
-//                 <Text
-//                   className="font-semibold"
-//                   style={{ color: userType === 'worker' ? '#ffffff' : '#6b7280' }}
-//                 >
-//                   Find Jobs
-//                 </Text>
-//               </Pressable>
-
-//               <Pressable
-//                 onPress={() => setUserType('employer')}
-//                 className="flex-1 py-4 rounded-xl items-center"
-//                 style={{
-//                   backgroundColor: userType === 'employer' ? '#447788' : '#ffffff',
-//                   borderWidth: 1,
-//                   borderColor: userType === 'employer' ? '#447788' : '#e5e7eb',
-//                   shadowColor: '#000000',
-//                   shadowOffset: { width: 0, height: 2 },
-//                   shadowOpacity: 0.05,
-//                   shadowRadius: 4,
-//                   elevation: 2,
-//                 }}
-//               >
-//                 <Ionicons
-//                   name="people"
-//                   size={24}
-//                   color={userType === 'employer' ? '#ffffff' : '#9ca3af'}
-//                   style={{ marginBottom: 4 }}
-//                 />
-//                 <Text
-//                   className="font-semibold"
-//                   style={{ color: userType === 'employer' ? '#ffffff' : '#6b7280' }}
-//                 >
-//                   Hire Workers
-//                 </Text>
-//               </Pressable>
-//             </View>
-
-//             {/* Sign Up Method */}
-//             <Text className="text-gray-700 text-sm mb-3">Sign up with:</Text>
-//             <View className="flex-row gap-3 mb-6">
-//               <Pressable
-//                 onPress={() => setSignUpMethod('phone')}
-//                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
-//                 style={{
-//                   backgroundColor: signUpMethod === 'phone' ? '#447788' : '#ffffff',
-//                   borderWidth: 1,
-//                   borderColor: signUpMethod === 'phone' ? '#447788' : '#e5e7eb',
-//                   shadowColor: '#000000',
-//                   shadowOffset: { width: 0, height: 2 },
-//                   shadowOpacity: 0.05,
-//                   shadowRadius: 4,
-//                   elevation: 2,
-//                 }}
-//               >
-//                 <Ionicons
-//                   name="call"
-//                   size={18}
-//                   color={signUpMethod === 'phone' ? '#ffffff' : '#6b7280'}
-//                   style={{ marginRight: 6 }}
-//                 />
-//                 <Text
-//                   className="font-semibold"
-//                   style={{ color: signUpMethod === 'phone' ? '#ffffff' : '#6b7280' }}
-//                 >
-//                   Phone
-//                 </Text>
-//               </Pressable>
-
-//               <Pressable
-//                 onPress={() => setSignUpMethod('email')}
-//                 className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
-//                 style={{
-//                   backgroundColor: signUpMethod === 'email' ? '#447788' : '#ffffff',
-//                   borderWidth: 1,
-//                   borderColor: signUpMethod === 'email' ? '#447788' : '#e5e7eb',
-//                   shadowColor: '#000000',
-//                   shadowOffset: { width: 0, height: 2 },
-//                   shadowOpacity: 0.05,
-//                   shadowRadius: 4,
-//                   elevation: 2,
-//                 }}
-//               >
-//                 <Ionicons
-//                   name="mail"
-//                   size={18}
-//                   color={signUpMethod === 'email' ? '#ffffff' : '#6b7280'}
-//                   style={{ marginRight: 6 }}
-//                 />
-//                 <Text
-//                   className="font-semibold"
-//                   style={{ color: signUpMethod === 'email' ? '#ffffff' : '#6b7280' }}
-//                 >
-//                   Email
-//                 </Text>
-//               </Pressable>
-//             </View>
-
-//             {/* Full Name */}
-//             <Text className="text-gray-700 text-sm mb-2">Full Name</Text>
-//             <View
-//               className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-//               style={{
-//                 borderWidth: 1,
-//                 borderColor: '#e5e7eb',
-//                 shadowColor: '#000000',
-//                 shadowOffset: { width: 0, height: 1 },
-//                 shadowOpacity: 0.05,
-//                 shadowRadius: 2,
-//                 elevation: 1,
-//               }}
-//             >
-//               <Ionicons name="person-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-//               <TextInput
-//                 placeholder="Enter your full name"
-//                 value={fullName}
-//                 onChangeText={setFullName}
-//                 className="flex-1 text-gray-700"
-//                 placeholderTextColor="#9ca3af"
-//               />
-//             </View>
-
-//             {/* Phone Number or Email */}
-//             {signUpMethod === 'phone' ? (
-//               <>
-//                 <Text className="text-gray-700 text-sm mb-2">Phone Number</Text>
-//                 <View
-//                   className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-//                   style={{
-//                     borderWidth: 1,
-//                     borderColor: '#e5e7eb',
-//                     shadowColor: '#000000',
-//                     shadowOffset: { width: 0, height: 1 },
-//                     shadowOpacity: 0.05,
-//                     shadowRadius: 2,
-//                     elevation: 1,
-//                   }}
-//                 >
-//                   <Ionicons name="call-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-//                   <TextInput
-//                     placeholder="98XXXXXXXX"
-//                     value={phoneNumber}
-//                     onChangeText={setPhoneNumber}
-//                     className="flex-1 text-gray-700"
-//                     placeholderTextColor="#9ca3af"
-//                     keyboardType="phone-pad"
-//                   />
-//                 </View>
-//               </>
-//             ) : (
-//               <>
-//                 <Text className="text-gray-700 text-sm mb-2">Email</Text>
-//                 <View
-//                   className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-//                   style={{
-//                     borderWidth: 1,
-//                     borderColor: '#e5e7eb',
-//                     shadowColor: '#000000',
-//                     shadowOffset: { width: 0, height: 1 },
-//                     shadowOpacity: 0.05,
-//                     shadowRadius: 2,
-//                     elevation: 1,
-//                   }}
-//                 >
-//                   <Ionicons name="mail-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-//                   <TextInput
-//                     placeholder="Enter your email"
-//                     value={email}
-//                     onChangeText={setEmail}
-//                     className="flex-1 text-gray-700"
-//                     placeholderTextColor="#9ca3af"
-//                     keyboardType="email-address"
-//                     autoCapitalize="none"
-//                   />
-//                 </View>
-//               </>
-//             )}
-
-//             {/* Password */}
-//             <Text className="text-gray-700 text-sm mb-2">Password</Text>
-//             <View
-//               className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4"
-//               style={{
-//                 borderWidth: 1,
-//                 borderColor: '#e5e7eb',
-//                 shadowColor: '#000000',
-//                 shadowOffset: { width: 0, height: 1 },
-//                 shadowOpacity: 0.05,
-//                 shadowRadius: 2,
-//                 elevation: 1,
-//               }}
-//             >
-//               <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-//               <TextInput
-//                 placeholder="Create a password"
-//                 value={password}
-//                 onChangeText={setPassword}
-//                 className="flex-1 text-gray-700"
-//                 placeholderTextColor="#9ca3af"
-//                 secureTextEntry
-//               />
-//             </View>
-
-//             {/* Confirm Password */}
-//             <Text className="text-gray-700 text-sm mb-2">Confirm Password</Text>
-//             <View
-//               className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-6"
-//               style={{
-//                 borderWidth: 1,
-//                 borderColor: '#e5e7eb',
-//                 shadowColor: '#000000',
-//                 shadowOffset: { width: 0, height: 1 },
-//                 shadowOpacity: 0.05,
-//                 shadowRadius: 2,
-//                 elevation: 1,
-//               }}
-//             >
-//               <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-//               <TextInput
-//                 placeholder="Confirm your password"
-//                 value={confirmPassword}
-//                 onChangeText={setConfirmPassword}
-//                 className="flex-1 text-gray-700"
-//                 placeholderTextColor="#9ca3af"
-//                 secureTextEntry
-//               />
-//             </View>
-
-//             {/* Terms and Conditions */}
-//             <Pressable
-//               onPress={() => setAgreedToTerms(!agreedToTerms)}
-//               className="flex-row items-start mb-6"
-//             >
-//               <View
-//                 className="w-5 h-5 rounded mr-3 items-center justify-center"
-//                 style={{
-//                   borderWidth: 2,
-//                   borderColor: agreedToTerms ? '#447788' : '#d1d5db',
-//                   backgroundColor: agreedToTerms ? '#447788' : '#ffffff',
-//                 }}
-//               >
-//                 {agreedToTerms && <Ionicons name="checkmark" size={14} color="#ffffff" />}
-//               </View>
-//               <Text className="text-gray-600 text-sm flex-1">
-//                 I agree to the{' '}
-//                 <Text style={{ color: '#447788' }}>Terms & Conditions</Text> and{' '}
-//                 <Text style={{ color: '#447788' }}>Privacy Policy</Text>
-//               </Text>
-//             </Pressable>
-
-//             {/* Create Account Button */}
-//             <Pressable
-//               onPress={handleSignUp}
-//               className="py-4 rounded-xl active:opacity-90"
-//               style={{
-//                 backgroundColor: '#447788',
-//                 shadowColor: '#000000',
-//                 shadowOffset: { width: 0, height: 4 },
-//                 shadowOpacity: 0.2,
-//                 shadowRadius: 8,
-//                 elevation: 6,
-//               }}
-//             >
-//               <Text className="text-white text-center font-bold text-base">
-//                 Create Account
-//               </Text>
-//             </Pressable>
-
-//             {/* Divider */}
-//             <View className="flex-row items-center my-6">
-//               <View className="flex-1 h-px bg-gray-300" />
-//               <Text className="text-gray-500 text-sm mx-4">OR</Text>
-//               <View className="flex-1 h-px bg-gray-300" />
-//             </View>
-
-//             {/* Login Link */}
-//             <View className="flex-row justify-center">
-//               <Text className="text-gray-600 text-sm">Already have an account? </Text>
-//               <Pressable onPress={onLogin}>
-//                 <Text className="font-bold text-sm" style={{ color: '#447788' }}>
-//                   Login
-//                 </Text>
-//               </Pressable>
-//             </View>
-//           </View>
-//         </View>
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
-// export default SignUpPage;
-
-
-
 import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
-  Pressable,
-  SafeAreaView,
+  TouchableOpacity,
+  StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
   Platform,
+  Image as RNImage,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { otpService } from "../services/otpService";
-import { userService } from "../services/userService";
-import { auth } from '../config/firebase'; 
+import { auth } from '../config/firebase';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -424,49 +20,45 @@ import {
 } from 'firebase/auth';
 import { CustomAlert } from '../common/CustomAlert';
 import { storage } from '../utils/storage';
+import { otpService } from '../services/otpService';
+import { userService } from '../services/userService';
 
-interface SignUpPageProps {
-  onBack?: () => void;
-  onLogin?: () => void;
-  onSignUpSuccess?: (userType: 'worker' | 'employer', method: 'phone' | 'email', contact: string, password?: string) => void;
-}
-
-interface AlertState {
-  visible: boolean;
-  title: string;
-  message: string;
-  buttons: Array<{
-    text: string;
-    onPress?: () => void;
-    style?: 'default' | 'cancel' | 'destructive';
-  }>;
-}
-
-const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
-  const [userType, setUserType] = useState<'worker' | 'employer'>('worker');
-  const [signUpMethod, setSignUpMethod] = useState<'phone' | 'email'>('phone');
+const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }) => {
+  const [userType, setUserType] = useState('worker');
+  const [signUpMethod, setSignUpMethod] = useState('phone');
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [alertState, setAlertState] = useState<AlertState>({
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [errors, setErrors] = useState({
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    terms: '',
+    general: '',
+  });
+
+  const [alertState, setAlertState] = useState({
     visible: false,
     title: '',
     message: '',
     buttons: [],
   });
 
-  const showCustomAlert = (title: string, message: string, buttons?: AlertState['buttons']) => {
+  const showCustomAlert = (title, message, buttons) => {
     setAlertState({
       visible: true,
       title,
       message,
-      buttons: buttons || [{ text: 'OK' }],
+      buttons,
     });
   };
 
@@ -475,490 +67,465 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
   };
 
   const handleSignUp = async () => {
-    console.log('=== CREATE ACCOUNT BUTTON CLICKED ===');
-    console.log('User Type:', userType);
-    console.log('Signup Method:', signUpMethod);
-    console.log('Full Name:', fullName);
-    console.log('Agreed to Terms:', agreedToTerms);
-    
-    // Prevent double submission
-    if (isLoading) {
-      console.log('Already loading, returning...');
-      return;
-    }
+    if (isLoading) return;
 
-    // Basic validation BEFORE setting loading state
-    if (!agreedToTerms) {
-      console.log('Terms not agreed');
-      showCustomAlert("Terms Required", "Please agree to the terms and conditions");
-      return;
-    }
+    // Clear previous errors
+    setErrors({
+      fullName: '',
+      phoneNumber: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      terms: '',
+      general: '',
+    });
+
+    let hasError = false;
+    const newErrors = {};
 
     if (!fullName.trim()) {
-      console.log('Name is empty');
-      showCustomAlert("Name Required", "Please enter your full name");
+      newErrors.fullName = 'Please enter your full name';
+      hasError = true;
+    }
+
+    if (signUpMethod === 'phone') {
+      if (!phoneNumber.trim()) {
+        newErrors.phoneNumber = 'Please enter your phone number';
+        hasError = true;
+      }
+    } else {
+      if (!email.trim()) {
+        newErrors.email = 'Please enter your email address';
+        hasError = true;
+      }
+    }
+
+    if (!password) {
+      newErrors.password = 'Please enter a password';
+      hasError = true;
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+      hasError = true;
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      hasError = true;
+    }
+
+    if (!agreedToTerms) {
+      newErrors.terms = 'Please agree to the Terms & Conditions';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log('Loading state set to true');
 
       if (signUpMethod === 'phone') {
-        if (!phoneNumber.trim()) {
-          setIsLoading(false);
-          showCustomAlert("Phone Required", "Please enter your phone number");
-          return;
-        }
-
-        if (!password || password.length < 6) {
-          setIsLoading(false);
-          showCustomAlert("Password Too Short", "Password must be at least 6 characters");
-          return;
-        }
-
-        if (password !== confirmPassword) {
-          setIsLoading(false);
-          showCustomAlert("Passwords Don't Match", "Please confirm your password correctly");
-          return;
-        }
-
-        const formattedPhone = phoneNumber.startsWith("+")
-          ? phoneNumber
-          : `+977${phoneNumber}`;
-
-        console.log('Sending OTP to:', formattedPhone);
+        const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+977${phoneNumber}`;
+        
         const result = await otpService.sendOTP(formattedPhone);
-        console.log('OTP Result:', result);
 
         if (result.success) {
-          console.log('OTP sent successfully, calling onSignUpSuccess');
-          onSignUpSuccess?.(userType, "phone", formattedPhone, password);
+          setIsLoading(false);
+          showCustomAlert(
+            'OTP Sent! 📱',
+            `Verification code sent to ${formattedPhone}`,
+            [
+              {
+                text: 'Verify',
+                onPress: () => {
+                  onSignUpSuccess?.(userType, signUpMethod, formattedPhone, password);
+                },
+              },
+            ]
+          );
         } else {
           setIsLoading(false);
-          
-          // Check if phone number is already registered
-          if (result.code === 'PHONE_ALREADY_REGISTERED') {
-            showCustomAlert(
-              "Phone Number Already Registered",
-              "This phone number is already registered. Would you like to login instead?",
-              [
-                {
-                  text: "Cancel",
-                  style: "cancel"
-                },
-                {
-                  text: "Go to Login",
-                  onPress: () => onLogin?.()
-                }
-              ]
-            );
-          } else {
-            showCustomAlert("OTP Failed", result.message || "Failed to send OTP");
-          }
+          setErrors({ ...errors, general: result.message || 'Failed to send OTP. Please try again.' });
         }
-      }
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email.trim().toLowerCase(),
+          password
+        );
 
-      if (signUpMethod === 'email') {
-        if (!email.trim()) {
-          setIsLoading(false);
-          showCustomAlert("Email Required", "Please enter your email");
-          return;
-        }
-        if (!password || password.length < 6) {
-          setIsLoading(false);
-          showCustomAlert("Password Too Short", "Password must be at least 6 characters");
-          return;
-        }
-        if (password !== confirmPassword) {
-          setIsLoading(false);
-          showCustomAlert("Passwords Don't Match", "Please confirm your password correctly");
-          return;
-        }
+        const user = userCredential.user;
 
-        console.log('📧 Starting email signup...');
-        console.log('Email:', email.trim().toLowerCase());
-        console.log('Password length:', password.length);
-        console.log('Auth object:', auth ? 'exists' : 'null');
-        console.log('Auth config:', auth?.config);
-        
-        try {
-          console.log('🔥 Calling createUserWithEmailAndPassword...');
-          const userCredential = await createUserWithEmailAndPassword(
-            auth,
-            email.trim().toLowerCase(),
-            password
-          );
+        await updateProfile(user, {
+          displayName: fullName.trim(),
+        });
 
-          const user = userCredential.user;
-          console.log('✅ User created successfully:', user.uid);
-          console.log('User email:', user.email);
-          
-          // Update Firebase user profile with displayName
-          console.log('💾 Updating Firebase profile...');
-          console.log('🔍 UserType being saved:', userType);
-          console.log('🔍 FullName being saved:', fullName);
-          
-          await updateProfile(user, {
-            displayName: fullName || email.trim().toLowerCase(),
-          });
-          
-          // Save user profile to backend (for additional data)
-          const saveResult = await userService.saveUserProfile(
-            user.uid,
-            email.trim().toLowerCase(),
-            userType,
-            fullName || email.trim().toLowerCase()
-          );
-          console.log('✅ User profile saved');
-          console.log('📊 Save result:', saveResult);
-          
-          // Store user type for after email verification
-          await storage.setItem('pendingUserType', userType);
-          await storage.setItem('pendingEmail', email.trim().toLowerCase());
-          await storage.setItem('pendingFirebaseUid', user.uid);
-          
-          console.log('📨 Sending verification email...');
-          
-          // Send verification email with redirect URL
-          // Only use actionCodeSettings on web (window.location is not available on mobile)
-          if (Platform.OS === 'web') {
-            const actionCodeSettings = {
-              url: window.location.origin, // Redirect back to your app
-              handleCodeInApp: true,
-            };
-            await sendEmailVerification(user, actionCodeSettings);
-          } else {
-            // On mobile, send without actionCodeSettings
-            await sendEmailVerification(user);
-          }
-          console.log('✅ Verification email sent');
+        await sendEmailVerification(user);
 
-          setIsLoading(false);
-          
-          // Navigate to verification page instead of showing alert
-          console.log('✅ Going to email verification page');
-          onSignUpSuccess?.(userType, 'email', email.trim().toLowerCase());
-          
-        } catch (emailError: any) {
-          console.error('❌ Email signup error:', emailError);
-          console.error('Error code:', emailError.code);
-          console.error('Error message:', emailError.message);
-          console.error('Full error:', JSON.stringify(emailError, null, 2));
-          throw emailError; // Re-throw to be caught by outer catch
-        }
-      }
-    } catch (error: any) {
-      console.error('Sign up error:', error);
-      
-      setIsLoading(false);
-      
-      if (error.code === 'auth/email-already-in-use') {
+        await userService.createUserProfile({
+          uid: user.uid,
+          email: user.email,
+          displayName: fullName.trim(),
+          userType: userType,
+          profileComplete: false,
+        });
+
+        await storage.setItem('pendingFirebaseUid', user.uid);
+
+        setIsLoading(false);
+
         showCustomAlert(
-          "Email Already Registered",
-          "This email is already registered. Would you like to login instead?",
+          'Verification Email Sent! 📧',
+          `We've sent a verification link to ${email}. Please check your inbox and verify your email.`,
           [
             {
-              text: "Cancel",
-              style: "cancel"
+              text: 'OK',
+              onPress: () => {
+                onSignUpSuccess?.(userType, signUpMethod, email, password);
+              },
             },
-            {
-              text: "Go to Login",
-              onPress: () => onLogin?.()
-            }
           ]
         );
-        return;
       }
-      
-      let message = "Sign up failed. Please try again.";
-      
-      if (error.code === 'auth/invalid-email') {
-        message = "Invalid email address. Please check and try again.";
+    } catch (error) {
+      setIsLoading(false);
+
+      let message = 'Sign up failed. Please try again.';
+
+      if (error.code === 'auth/email-already-in-use') {
+        setErrors({ ...errors, email: 'This email is already registered. Please login instead.' });
+        return;
+      } else if (error.code === 'auth/invalid-email') {
+        setErrors({ ...errors, email: 'Invalid email address. Please check and try again.' });
+        return;
       } else if (error.code === 'auth/weak-password') {
-        message = "Password is too weak. Use at least 6 characters.";
+        setErrors({ ...errors, password: 'Password is too weak. Please use a stronger password.' });
+        return;
       } else if (error.code === 'auth/network-request-failed') {
-        message = "Network error. Please check your connection.";
-      } else if (error.code === 'auth/api-key-not-valid') {
-        message = "Firebase configuration error. Please clear cache and restart:\n\nnpx expo start -c";
+        message = 'Network error. Please check your connection.';
       } else if (error.message) {
         message = error.message;
       }
 
-      showCustomAlert("Error", message);
+      setErrors({ ...errors, general: message });
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={['#447788', '#628BB5', '#B5DBE1']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="px-6 py-6"
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <LinearGradient
+        colors={['#2c3e50', '#34495e', '#3d5a6c']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row items-center mb-4">
-            <Pressable onPress={onBack} className="mr-4">
-              <Ionicons name="arrow-back" size={24} color="#ffffff" />
-            </Pressable>
-            <Text className="text-white text-xl font-bold">Sign Up</Text>
-          </View>
-          <Text className="text-white text-sm">Join HaatBazar Jobs today</Text>
-        </LinearGradient>
+          {/* Back Button */}
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
 
-        {/* Content */}
-        <View className="items-center px-6 py-8">
-          <View className="w-full" style={{ maxWidth: 500 }}>
+          {/* Brand Icon */}
+          <View style={styles.brandBadge}>
+            <RNImage 
+              source={require('../../assets/Icon.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.brandTitle}>HaatBazar Jobs</Text>
+
+          {/* Welcome Text */}
+          <Text style={styles.welcomeTitle}>Create Account</Text>
+          <Text style={styles.welcomeSubtitle}>Join us and start your journey today</Text>
+
+          {/* Signup Card */}
+          <View style={styles.signupCard}>
             {/* User Type Selection */}
-            <Text className="text-gray-700 text-sm mb-3">I want to:</Text>
-            <View className="flex-row gap-3 mb-6">
-              <Pressable
+            <Text style={styles.sectionLabel}>I want to</Text>
+            <View style={styles.userTypeToggle}>
+              <TouchableOpacity
                 onPress={() => setUserType('worker')}
-                className="flex-1 py-4 rounded-xl items-center"
-                style={{
-                  backgroundColor: userType === 'worker' ? '#447788' : '#ffffff',
-                  borderWidth: 1,
-                  borderColor: userType === 'worker' ? '#447788' : '#e5e7eb',
-                  shadowColor: '#000000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
+                style={[
+                  styles.userTypeButton,
+                  userType === 'worker' && styles.userTypeButtonActive
+                ]}
+                activeOpacity={0.7}
               >
-                <Ionicons
-                  name="briefcase"
-                  size={24}
-                  color={userType === 'worker' ? '#ffffff' : '#9ca3af'}
-                  style={{ marginBottom: 4 }}
+                <Ionicons 
+                  name="briefcase" 
+                  size={18} 
+                  color={userType === 'worker' ? '#fff' : '#94a3b8'} 
                 />
-                <Text className="font-semibold" style={{ color: userType === 'worker' ? '#ffffff' : '#6b7280' }}>
+                <Text style={[
+                  styles.userTypeButtonText,
+                  userType === 'worker' && styles.userTypeButtonTextActive
+                ]}>
                   Find Jobs
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
 
-              <Pressable
+              <TouchableOpacity
                 onPress={() => setUserType('employer')}
-                className="flex-1 py-4 rounded-xl items-center"
-                style={{
-                  backgroundColor: userType === 'employer' ? '#447788' : '#ffffff',
-                  borderWidth: 1,
-                  borderColor: userType === 'employer' ? '#447788' : '#e5e7eb',
-                  shadowColor: '#000000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
+                style={[
+                  styles.userTypeButton,
+                  userType === 'employer' && styles.userTypeButtonActive
+                ]}
+                activeOpacity={0.7}
               >
-                <Ionicons
-                  name="people"
-                  size={24}
-                  color={userType === 'employer' ? '#ffffff' : '#9ca3af'}
-                  style={{ marginBottom: 4 }}
+                <Ionicons 
+                  name="people" 
+                  size={18} 
+                  color={userType === 'employer' ? '#fff' : '#94a3b8'} 
                 />
-                <Text className="font-semibold" style={{ color: userType === 'employer' ? '#ffffff' : '#6b7280' }}>
+                <Text style={[
+                  styles.userTypeButtonText,
+                  userType === 'employer' && styles.userTypeButtonTextActive
+                ]}>
                   Hire Workers
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
 
-            {/* Sign Up Method */}
-            <Text className="text-gray-700 text-sm mb-3">Sign up with:</Text>
-            <View className="flex-row gap-3 mb-6">
-              <Pressable
+            {/* Sign up with */}
+            <Text style={styles.sectionLabel}>Sign up with</Text>
+            <View style={styles.methodToggle}>
+              <TouchableOpacity
                 onPress={() => setSignUpMethod('phone')}
-                className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
-                style={{
-                  backgroundColor: signUpMethod === 'phone' ? '#447788' : '#ffffff',
-                  borderWidth: 1,
-                  borderColor: signUpMethod === 'phone' ? '#447788' : '#e5e7eb',
-                }}
+                style={[
+                  styles.methodButton,
+                  signUpMethod === 'phone' && styles.methodButtonActive
+                ]}
+                activeOpacity={0.7}
               >
-                <Ionicons name="call" size={18} color={signUpMethod === 'phone' ? '#ffffff' : '#6b7280'} style={{ marginRight: 6 }} />
-                <Text className="font-semibold" style={{ color: signUpMethod === 'phone' ? '#ffffff' : '#6b7280' }}>Phone</Text>
-              </Pressable>
+                <Ionicons 
+                  name="call" 
+                  size={18} 
+                  color={signUpMethod === 'phone' ? '#fff' : '#94a3b8'} 
+                />
+                <Text style={[
+                  styles.methodButtonText,
+                  signUpMethod === 'phone' && styles.methodButtonTextActive
+                ]}>
+                  Phone
+                </Text>
+              </TouchableOpacity>
 
-              <Pressable
+              <TouchableOpacity
                 onPress={() => setSignUpMethod('email')}
-                className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
-                style={{
-                  backgroundColor: signUpMethod === 'email' ? '#447788' : '#ffffff',
-                  borderWidth: 1,
-                  borderColor: signUpMethod === 'email' ? '#447788' : '#e5e7eb',
-                }}
+                style={[
+                  styles.methodButton,
+                  signUpMethod === 'email' && styles.methodButtonActive
+                ]}
+                activeOpacity={0.7}
               >
-                <Ionicons name="mail" size={18} color={signUpMethod === 'email' ? '#ffffff' : '#6b7280'} style={{ marginRight: 6 }} />
-                <Text className="font-semibold" style={{ color: signUpMethod === 'email' ? '#ffffff' : '#6b7280' }}>Email</Text>
-              </Pressable>
+                <Ionicons 
+                  name="mail" 
+                  size={18} 
+                  color={signUpMethod === 'email' ? '#fff' : '#94a3b8'} 
+                />
+                <Text style={[
+                  styles.methodButtonText,
+                  signUpMethod === 'email' && styles.methodButtonTextActive
+                ]}>
+                  Email
+                </Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Full Name */}
-            <Text className="text-gray-700 text-sm mb-2">Full Name</Text>
-            <View className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4" style={{ borderWidth: 1, borderColor: '#e5e7eb' }}>
-              <Ionicons name="person-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-              <TextInput
-                placeholder="Enter your full name"
-                value={fullName}
-                onChangeText={setFullName}
-                className="flex-1 text-gray-700"
-                placeholderTextColor="#9ca3af"
-              />
+            {/* Full Name Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <View style={[styles.inputContainer, errors.fullName && styles.inputContainerError]}>
+                <Ionicons name="person-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChangeText={(text) => {
+                    setFullName(text);
+                    if (errors.fullName) setErrors({ ...errors, fullName: '' });
+                  }}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                />
+              </View>
+              {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
             </View>
 
-            {/* Phone or Email */}
+            {/* Phone/Email Input */}
             {signUpMethod === 'phone' ? (
-              <>
-                <Text className="text-gray-700 text-sm mb-2">Phone Number</Text>
-                <View className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4" style={{ borderWidth: 1, borderColor: '#e5e7eb' }}>
-                  <Ionicons name="call-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Phone Number</Text>
+                <View style={[styles.inputContainer, errors.phoneNumber && styles.inputContainerError]}>
+                  <Ionicons name="call-outline" size={20} color="#94a3b8" />
                   <TextInput
                     placeholder="98XXXXXXXX"
                     value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
+                    onChangeText={(text) => {
+                      setPhoneNumber(text);
+                      if (errors.phoneNumber) setErrors({ ...errors, phoneNumber: '' });
+                    }}
+                    style={styles.input}
+                    placeholderTextColor="#cbd5e1"
                     keyboardType="phone-pad"
                   />
                 </View>
-
-                <Text className="text-gray-700 text-sm mb-2">Password</Text>
-                <View className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4" style={{ borderWidth: 1, borderColor: '#e5e7eb' }}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-                  <TextInput
-                    placeholder="Create a password (min 6 chars)"
-                    value={password}
-                    onChangeText={setPassword}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
-                    secureTextEntry={!showPassword}
-                  />
-                  <Pressable onPress={() => setShowPassword(!showPassword)}>
-                    <Ionicons 
-                      name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                      size={20} 
-                      color="#9ca3af" 
-                    />
-                  </Pressable>
-                </View>
-
-                <Text className="text-gray-700 text-sm mb-2">Confirm Password</Text>
-                <View className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-6" style={{ borderWidth: 1, borderColor: '#e5e7eb' }}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-                  <TextInput
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
-                    secureTextEntry={!showConfirmPassword}
-                  />
-                  <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    <Ionicons 
-                      name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
-                      size={20} 
-                      color="#9ca3af" 
-                    />
-                  </Pressable>
-                </View>
-              </>
+                {errors.phoneNumber ? <Text style={styles.errorText}>{errors.phoneNumber}</Text> : null}
+              </View>
             ) : (
-              <>
-                <Text className="text-gray-700 text-sm mb-2">Email</Text>
-                <View className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4" style={{ borderWidth: 1, borderColor: '#e5e7eb' }}>
-                  <Ionicons name="mail-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <View style={[styles.inputContainer, errors.email && styles.inputContainerError]}>
+                  <Ionicons name="mail-outline" size={20} color="#94a3b8" />
                   <TextInput
-                    placeholder="Enter your email"
+                    placeholder="your@email.com"
                     value={email}
-                    onChangeText={setEmail}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (errors.email) setErrors({ ...errors, email: '' });
+                    }}
+                    style={styles.input}
+                    placeholderTextColor="#cbd5e1"
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
                 </View>
-
-                <Text className="text-gray-700 text-sm mb-2">Password</Text>
-                <View className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-4" style={{ borderWidth: 1, borderColor: '#e5e7eb' }}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-                  <TextInput
-                    placeholder="Create a password (min 6 chars)"
-                    value={password}
-                    onChangeText={setPassword}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
-                    secureTextEntry={!showPassword}
-                  />
-                  <Pressable onPress={() => setShowPassword(!showPassword)}>
-                    <Ionicons 
-                      name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                      size={20} 
-                      color="#9ca3af" 
-                    />
-                  </Pressable>
-                </View>
-
-                <Text className="text-gray-700 text-sm mb-2">Confirm Password</Text>
-                <View className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-6" style={{ borderWidth: 1, borderColor: '#e5e7eb' }}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
-                  <TextInput
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
-                    secureTextEntry={!showConfirmPassword}
-                  />
-                  <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    <Ionicons 
-                      name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
-                      size={20} 
-                      color="#9ca3af" 
-                    />
-                  </Pressable>
-                </View>
-              </>
+                {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+              </View>
             )}
 
-            {/* Terms */}
-            <Pressable onPress={() => setAgreedToTerms(!agreedToTerms)} className="flex-row items-start mb-6">
-              <View className="w-5 h-5 rounded mr-3 items-center justify-center" style={{ borderWidth: 2, borderColor: agreedToTerms ? '#447788' : '#d1d5db', backgroundColor: agreedToTerms ? '#447788' : '#ffffff' }}>
-                {agreedToTerms && <Ionicons name="checkmark" size={14} color="#ffffff" />}
+            {/* Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <View style={[styles.inputContainer, errors.password && styles.inputContainerError]}>
+                <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Create a password"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (errors.password) setErrors({ ...errors, password: '' });
+                  }}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons 
+                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                    size={20} 
+                    color="#94a3b8" 
+                  />
+                </TouchableOpacity>
               </View>
-              <Text className="text-gray-600 text-sm flex-1">
-                I agree to the <Text style={{ color: '#447788' }}>Terms & Conditions</Text> and <Text style={{ color: '#447788' }}>Privacy Policy</Text>
-              </Text>
-            </Pressable>
+              {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            </View>
+
+            {/* Confirm Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Confirm Password</Text>
+              <View style={[styles.inputContainer, errors.confirmPassword && styles.inputContainerError]}>
+                <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" />
+                <TextInput
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
+                  }}
+                  style={styles.input}
+                  placeholderTextColor="#cbd5e1"
+                  secureTextEntry={!showConfirmPassword}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+                  <Ionicons 
+                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
+                    size={20} 
+                    color="#94a3b8" 
+                  />
+                </TouchableOpacity>
+                {confirmPassword.length > 0 && password.length > 0 && (
+                  <View style={styles.matchIndicator}>
+                    {password === confirmPassword ? (
+                      <Ionicons name="checkmark-circle" size={22} color="#10b981" />
+                    ) : (
+                      <Ionicons name="close-circle" size={22} color="#ef4444" />
+                    )}
+                  </View>
+                )}
+              </View>
+              {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
+            </View>
+
+            {/* Terms Checkbox */}
+            <View style={styles.termsGroup}>
+              <TouchableOpacity 
+                onPress={() => {
+                  setAgreedToTerms(!agreedToTerms);
+                  if (errors.terms) setErrors({ ...errors, terms: '' });
+                }}
+                style={styles.termsContainer}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+                  {agreedToTerms && <Ionicons name="checkmark" size={16} color="#fff" />}
+                </View>
+                <Text style={styles.termsText}>
+                  I agree to the <Text style={styles.termsLink}>Terms & Conditions</Text> and{' '}
+                  <Text style={styles.termsLink}>Privacy Policy</Text>
+                </Text>
+              </TouchableOpacity>
+              {errors.terms ? <Text style={styles.errorText}>{errors.terms}</Text> : null}
+            </View>
+
+            {/* General Error */}
+            {errors.general ? (
+              <View style={styles.generalErrorContainer}>
+                <Text style={styles.generalErrorText}>{errors.general}</Text>
+              </View>
+            ) : null}
 
             {/* Create Account Button */}
-            <Pressable
-              onPress={() => {
-                console.log('Button pressed!');
-                handleSignUp();
-              }}
+            <TouchableOpacity
+              onPress={handleSignUp}
               disabled={isLoading}
-              className="py-4 rounded-xl active:opacity-90 mb-6"
-              style={{ backgroundColor: isLoading ? '#9ca3af' : '#447788', elevation: 6 }}
+              style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
+              activeOpacity={0.8}
             >
-              <Text className="text-white text-center font-bold text-base">
+              <Text style={styles.signupButtonText}>
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </Text>
-            </Pressable>
+              {!isLoading && <Ionicons name="arrow-forward" size={20} color="#fff" />}
+            </TouchableOpacity>
 
             {/* Login Link */}
-            <View className="flex-row justify-center">
-              <Text className="text-gray-600 text-sm">Already have an account? </Text>
-              <Pressable onPress={onLogin}>
-                <Text className="font-bold text-sm" style={{ color: '#447788' }}>Login</Text>
-              </Pressable>
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Already have an account? </Text>
+              <TouchableOpacity onPress={onLogin}>
+                <Text style={styles.loginLink}>Login</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
-      </ScrollView>
-      
-      {/* Custom Alert Modal */}
+
+          {/* Terms */}
+          <Text style={styles.bottomTermsText}>
+            By continuing, you agree to our Terms & Privacy Policy
+          </Text>
+        </ScrollView>
+      </LinearGradient>
+
       <CustomAlert
         visible={alertState.visible}
         title={alertState.title}
@@ -966,8 +533,272 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }: SignUpPageProps) => {
         buttons={alertState.buttons}
         onDismiss={hideAlert}
       />
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandBadge: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  logoImage: {
+    width: 70,
+    height: 70,
+  },
+  brandTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 24,
+  },
+  brandText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  welcomeTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  welcomeSubtitle: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 32,
+  },
+  signupCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: 12,
+  },
+  userTypeToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 20,
+  },
+  userTypeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  userTypeButtonActive: {
+    backgroundColor: '#1e293b',
+  },
+  userTypeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#94a3b8',
+  },
+  userTypeButtonTextActive: {
+    color: '#fff',
+  },
+  methodToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 20,
+  },
+  methodButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  methodButtonActive: {
+    backgroundColor: '#1e293b',
+  },
+  methodButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#94a3b8',
+  },
+  methodButtonTextActive: {
+    color: '#fff',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  inputContainerError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#ef4444',
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  generalErrorContainer: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  generalErrorText: {
+    fontSize: 13,
+    color: '#dc2626',
+    textAlign: 'center',
+  },
+  eyeIcon: {
+    marginRight: 4,
+  },
+  matchIndicator: {
+    marginLeft: 4,
+  },
+  termsGroup: {
+    marginBottom: 20,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#64748b',
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: '#10b981',
+    fontWeight: '600',
+  },
+  signupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1e293b',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  signupButtonDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  signupButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loginText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  loginLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  bottomTermsText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
+    marginTop: 24,
+  },
+});
 
 export default SignUpPage;

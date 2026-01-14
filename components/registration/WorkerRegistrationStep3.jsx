@@ -2,21 +2,16 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Pressable,
+  TouchableOpacity,
   SafeAreaView,
   ScrollView,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { profileService } from '../services/profileService';
-
-interface WorkerRegistrationStep3Props {
-  onBack?: () => void;
-  onContinue?: (skills: string[]) => void;
-  onSkip?: () => void;
-}
 
 const AVAILABLE_SKILLS = [
   'Plumber',
@@ -35,11 +30,11 @@ const AVAILABLE_SKILLS = [
   'Babysitter',
 ];
 
-const WorkerRegistrationStep3 = ({ onBack, onContinue, onSkip }: WorkerRegistrationStep3Props) => {
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+const WorkerRegistrationStep3 = ({ onBack, onContinue, onSkip }) => {
+  const [selectedSkills, setSelectedSkills] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  const toggleSkill = (skill: string) => {
+  const toggleSkill = (skill) => {
     if (selectedSkills.includes(skill)) {
       setSelectedSkills(selectedSkills.filter(s => s !== skill));
     } else {
@@ -81,129 +76,262 @@ const WorkerRegistrationStep3 = ({ onBack, onContinue, onSkip }: WorkerRegistrat
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={['#447788', '#628BB5', '#B5DBE1']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="px-6 py-6"
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#2c3e50', '#34495e', '#3d5a6c']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center flex-1">
-              <Pressable onPress={onBack} className="mr-4" disabled={isSaving}>
-                <Ionicons name="arrow-back" size={24} color="#ffffff" />
-              </Pressable>
-              <Text className="text-white text-xl font-bold">Worker Registration</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onBack} style={styles.backButton} disabled={isSaving}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Worker Registration</Text>
+            <View style={styles.placeholder} />
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressText}>Step 3 of 5</Text>
+              <Text style={styles.progressText}>60%</Text>
+            </View>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: '60%' }]} />
             </View>
           </View>
 
-          {/* Progress */}
-          <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-white text-sm">Step 3 of 5</Text>
-            <Text className="text-white text-sm">60%</Text>
-          </View>
-          <View className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
-            <View 
-              className="h-full rounded-full"
-              style={{ 
-                width: '60%',
-                backgroundColor: '#ffffff'
-              }}
-            />
-          </View>
-        </LinearGradient>
-
-        {/* Content */}
-        <View className="items-center px-6 py-8">
-          <View className="w-full" style={{ maxWidth: 500 }}>
-            {/* Title */}
-            <Text className="text-gray-900 text-2xl font-bold mb-2">Your Skills</Text>
-            <Text className="text-gray-600 text-sm mb-8">
+          {/* Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Your Skills</Text>
+            <Text style={styles.cardSubtitle}>
               Select all the skills you can offer (Select at least one)
             </Text>
 
             {/* Skills Grid */}
-            <View className="flex-row flex-wrap gap-3 mb-8">
+            <View style={styles.skillsGrid}>
               {AVAILABLE_SKILLS.map((skill) => {
                 const isSelected = selectedSkills.includes(skill);
                 return (
-                  <Pressable
+                  <TouchableOpacity
                     key={skill}
                     onPress={() => toggleSkill(skill)}
-                    className="rounded-xl px-6 py-3"
-                    style={{
-                      backgroundColor: isSelected ? '#447788' : '#ffffff',
-                      borderWidth: 2,
-                      borderColor: isSelected ? '#447788' : '#e5e7eb',
-                      shadowColor: '#000000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 4,
-                      elevation: 2,
-                    }}
+                    style={[
+                      styles.skillChip,
+                      isSelected && styles.skillChipSelected
+                    ]}
                     disabled={isSaving}
+                    activeOpacity={0.7}
                   >
-                    <Text
-                      className="font-semibold text-sm"
-                      style={{ color: isSelected ? '#ffffff' : '#6b7280' }}
-                    >
+                    <Text style={[
+                      styles.skillText,
+                      isSelected && styles.skillTextSelected
+                    ]}>
                       {skill}
                     </Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 );
               })}
             </View>
 
             {/* Selected Count */}
             {selectedSkills.length > 0 && (
-              <View className="bg-blue-50 rounded-xl px-4 py-3 mb-6">
-                <Text className="text-sm" style={{ color: '#447788' }}>
-                  {selectedSkills.length} skill{selectedSkills.length > 1 ? 's' : ''} selected
+              <View style={styles.selectedBadge}>
+                <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                <Text style={styles.selectedText}>
+                  {selectedSkills.length} skill(s) selected
                 </Text>
               </View>
             )}
 
             {/* Continue Button */}
-            <Pressable
+            <TouchableOpacity
               onPress={handleContinue}
               disabled={selectedSkills.length === 0 || isSaving}
-              className="py-4 rounded-xl active:opacity-90"
-              style={{
-                backgroundColor: selectedSkills.length > 0 && !isSaving ? '#447788' : '#d1d5db',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: selectedSkills.length > 0 ? 0.2 : 0.1,
-                shadowRadius: 8,
-                elevation: selectedSkills.length > 0 ? 6 : 2,
-              }}
+              style={[styles.continueButton, (selectedSkills.length === 0 || isSaving) && styles.continueButtonDisabled]}
+              activeOpacity={0.8}
             >
               {isSaving ? (
-                <View className="flex-row items-center justify-center">
+                <View style={styles.buttonContent}>
                   <ActivityIndicator color="#ffffff" size="small" />
-                  <Text className="text-white text-center font-bold text-base ml-2">
-                    Saving...
-                  </Text>
+                  <Text style={styles.continueButtonText}>Saving...</Text>
                 </View>
               ) : (
-                <Text className="text-white text-center font-bold text-base">
-                  Continue
-                </Text>
+                <View style={styles.buttonContent}>
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#fff" />
+                </View>
               )}
-            </Pressable>
+            </TouchableOpacity>
 
             {/* Skip Button */}
-            <Pressable onPress={onSkip} className="mt-4" disabled={isSaving}>
-              <Text className="text-gray-600 text-center text-sm">
-                Skip for now
-              </Text>
-            </Pressable>
+            <TouchableOpacity onPress={onSkip} style={styles.skipButton} disabled={isSaving}>
+              <Text style={styles.skipButtonText}>Skip for now →</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 32,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  placeholder: {
+    width: 40,
+  },
+  progressContainer: {
+    marginBottom: 40,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#10b981',
+    borderRadius: 3,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    lineHeight: 20,
+    marginBottom: 32,
+  },
+  skillsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 24,
+  },
+  skillChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+  },
+  skillChipSelected: {
+    backgroundColor: '#1e293b',
+    borderColor: '#1e293b',
+  },
+  skillText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  skillTextSelected: {
+    color: '#fff',
+  },
+  selectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  selectedText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#10b981',
+  },
+  continueButton: {
+    width: '100%',
+    backgroundColor: '#1e293b',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  continueButtonDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  continueButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  skipButton: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  skipButtonText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+});
 
 export default WorkerRegistrationStep3;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Platform, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { auth } from 'components/config/firebase';
 import { storage } from 'components/utils/storage';
 import HomePage from 'components/home/HomePage';
@@ -23,50 +24,18 @@ import EmployerDashboard from 'components/dashboard/EmployerDashboard';
 
 import './global.css';
 
-type AppScreen = 'home' | 'signup' | 'verifySignup' | 'verifyEmail' | 'login' | 'forgotPassword' | 'resetPassword' | 'workerReg1' | 'workerReg2' | 'workerReg3' | 'workerReg4' | 'workerReg5' | 'employerReg1' | 'employerReg2' | 'employerReg3' | 'dashboard';
-type UserType = 'worker' | 'employer' | null;
-
-interface WorkerRegistrationData {
-  profilePhoto?: string;
-  nidNumber?: string;
-  nidFront?: string;
-  nidBack?: string;
-  skills?: string[];
-  experience?: string;
-  hourlyRate?: string;
-  bio?: string;
-  address?: string;
-  city?: string;
-  district?: string;
-  availability?: string[];
-}
-
-interface EmployerRegistrationData {
-  profilePhoto?: string;
-  nidNumber?: string;
-  nidFront?: string;
-  nidBack?: string;
-  fullName?: string;
-  phoneNumber?: string;
-  email?: string;
-  companyName?: string;
-  address?: string;
-  city?: string;
-  district?: string;
-}
-
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<AppScreen>('home');
-  const [userType, setUserType] = useState<UserType>(null);
-  const [userName, setUserName] = useState<string>('User');
-  const [resetMethod, setResetMethod] = useState<'phone' | 'email'>('phone');
-  const [resetContact, setResetContact] = useState<string>('');
-  const [signupMethod, setSignupMethod] = useState<'phone' | 'email'>('phone');
-  const [signupContact, setSignupContact] = useState<string>('');
-  const [signupPassword, setSignupPassword] = useState<string>(''); // Store password for phone signup
-  const [signupEmail, setSignupEmail] = useState<string>(''); // Store email for verification page
-  const [workerRegistrationData, setWorkerRegistrationData] = useState<WorkerRegistrationData>({});
-  const [employerRegistrationData, setEmployerRegistrationData] = useState<EmployerRegistrationData>({});
+  const [currentScreen, setCurrentScreen] = useState('home');
+  const [userType, setUserType] = useState(null);
+  const [userName, setUserName] = useState('User');
+  const [resetMethod, setResetMethod] = useState('phone');
+  const [resetContact, setResetContact] = useState('');
+  const [signupMethod, setSignupMethod] = useState('phone');
+  const [signupContact, setSignupContact] = useState('');
+  const [signupPassword, setSignupPassword] = useState(''); // Store password for phone signup
+  const [signupEmail, setSignupEmail] = useState(''); // Store email for verification page
+  const [workerRegistrationData, setWorkerRegistrationData] = useState({});
+  const [employerRegistrationData, setEmployerRegistrationData] = useState({});
 
   // Animation for page transitions - slide effect
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -110,7 +79,7 @@ export default function App() {
     setCurrentScreen('forgotPassword');
   };
 
-  const handleSendResetCode = (method: 'phone' | 'email', contact: string) => {
+  const handleSendResetCode = (method, contact) => {
     setResetMethod(method);
     setResetContact(contact);
     setCurrentScreen('resetPassword');
@@ -120,7 +89,7 @@ export default function App() {
     setCurrentScreen('login');
   };
 
-  const handleSignUpSuccess = (selectedUserType: 'worker' | 'employer', method: 'phone' | 'email', contact: string, password?: string) => {
+  const handleSignUpSuccess = (selectedUserType, method, contact, password) => {
     console.log('📝 handleSignUpSuccess called');
     console.log('User Type:', selectedUserType);
     console.log('Method:', method);
@@ -169,27 +138,27 @@ export default function App() {
   };
 
   // Worker Registration Handlers
-  const handleWorkerRegistrationStep1Complete = (photoUri: string) => {
+  const handleWorkerRegistrationStep1Complete = (photoUri) => {
     setWorkerRegistrationData({ ...workerRegistrationData, profilePhoto: photoUri });
     setCurrentScreen('workerReg2');
   };
 
-  const handleWorkerRegistrationStep2Complete = (data: { nidNumber: string; nidFront: string; nidBack: string }) => {
+  const handleWorkerRegistrationStep2Complete = (data) => {
     setWorkerRegistrationData({ ...workerRegistrationData, ...data });
     setCurrentScreen('workerReg3');
   };
 
-  const handleWorkerRegistrationStep3Complete = (skills: string[]) => {
+  const handleWorkerRegistrationStep3Complete = (skills) => {
     setWorkerRegistrationData({ ...workerRegistrationData, skills });
     setCurrentScreen('workerReg4');
   };
 
-  const handleWorkerRegistrationStep4Complete = (data: { experience: string; hourlyRate: string; bio: string }) => {
+  const handleWorkerRegistrationStep4Complete = (data) => {
     setWorkerRegistrationData({ ...workerRegistrationData, ...data });
     setCurrentScreen('workerReg5');
   };
 
-  const handleWorkerRegistrationStep5Complete = async (data: { address: string; city: string; district: string; availability: string[] }) => {
+  const handleWorkerRegistrationStep5Complete = async (data) => {
     setWorkerRegistrationData({ ...workerRegistrationData, ...data });
     console.log('Complete worker registration data:', { ...workerRegistrationData, ...data });
     
@@ -211,25 +180,17 @@ export default function App() {
   };
 
   // Employer Registration Handlers
-  const handleEmployerRegistrationStep1Complete = (photoUri: string) => {
+  const handleEmployerRegistrationStep1Complete = (photoUri) => {
     setEmployerRegistrationData({ ...employerRegistrationData, profilePhoto: photoUri });
     setCurrentScreen('employerReg2');
   };
 
-  const handleEmployerRegistrationStep2Complete = (data: { nidNumber: string; nidFront: string; nidBack: string }) => {
+  const handleEmployerRegistrationStep2Complete = (data) => {
     setEmployerRegistrationData({ ...employerRegistrationData, ...data });
     setCurrentScreen('employerReg3');
   };
 
-  const handleEmployerRegistrationStep3Complete = async (data: { 
-    fullName: string; 
-    phoneNumber: string; 
-    email: string; 
-    companyName: string; 
-    address: string; 
-    city: string; 
-    district: string; 
-  }) => {
+  const handleEmployerRegistrationStep3Complete = async (data) => {
     setEmployerRegistrationData({ ...employerRegistrationData, ...data });
     console.log('Complete employer registration data:', { ...employerRegistrationData, ...data });
     
@@ -250,7 +211,7 @@ export default function App() {
     setCurrentScreen('dashboard');
   };
 
-  const handleLoginSuccess = (userType: 'worker' | 'employer', profileComplete: boolean, displayName?: string) => {
+  const handleLoginSuccess = (userType, profileComplete, displayName) => {
     console.log('🎯 handleLoginSuccess called');
     console.log('User Type:', userType);
     console.log('Profile Complete:', profileComplete);
@@ -429,11 +390,11 @@ export default function App() {
   };
 
   return (
-    <>
+    <SafeAreaProvider>
       <Animated.View style={{ flex: 1, transform: [{ translateX: slideAnim }] }}>
         {renderScreen()}
       </Animated.View>
       <StatusBar style="auto" />
-    </>
+    </SafeAreaProvider>
   );
 }

@@ -11,18 +11,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-interface EmployerDashboardProps {
-  onLogout: () => void;
-  userName?: string;
-}
-
-export default function EmployerDashboard({ onLogout, userName = 'Priya' }: EmployerDashboardProps) {
-  const [selectedTab, setSelectedTab] = useState<'home' | 'myJobs' | 'messages' | 'profile'>('home');
+export default function EmployerDashboard({ onLogout, userName = 'Priya' }) {
+  const [selectedTab, setSelectedTab] = useState('home');
   const [showPostJobModal, setShowPostJobModal] = useState(false);
   const [isUrgent, setIsUrgent] = useState(false);
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState([]);
   const [location, setLocation] = useState('');
   const [district, setDistrict] = useState('');
   const [budget, setBudget] = useState('');
@@ -173,7 +168,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Priya' }: Empl
     'Cook', 'Security Guard', 'Babysitter',
   ];
 
-  const toggleSkill = (skill: string) => {
+  const toggleSkill = (skill) => {
     if (selectedSkills.includes(skill)) {
       setSelectedSkills(selectedSkills.filter(s => s !== skill));
     } else {
