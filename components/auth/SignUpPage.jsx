@@ -167,13 +167,21 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }) => {
 
         await sendEmailVerification(user);
 
-        await userService.createUserProfile({
-          uid: user.uid,
-          email: user.email,
-          displayName: fullName.trim(),
-          userType: userType,
-          profileComplete: false,
-        });
+        // Save user profile to backend database
+        const saveResult = await userService.saveUserProfile(
+          user.uid,
+          user.email,
+          userType,
+          fullName.trim()
+        );
+
+        if (!saveResult.success) {
+          // If saving profile fails, delete the Firebase user and show error
+          await user.delete();
+          setIsLoading(false);
+          setErrors({ ...errors, general: 'Failed to create user profile. Please try again.' });
+          return;
+        }
 
         await storage.setItem('pendingFirebaseUid', user.uid);
 

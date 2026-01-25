@@ -149,6 +149,32 @@ export const profileService = {
     }
   },
 
+  checkWorkerVerification: async (firebaseUid: string) => {
+    try {
+      const response = await fetch(`${API_URL}/worker-profile/${firebaseUid}`);
+      const result = await response.json();
+      if (result.success && result.data) {
+        return {
+          success: true,
+          isVerified: result.data.isVerified || false,
+          profileExists: true,
+        };
+      }
+      return {
+        success: true,
+        isVerified: false,
+        profileExists: false,
+      };
+    } catch (error) {
+      console.error('Error checking worker verification:', error);
+      return {
+        success: false,
+        isVerified: false,
+        profileExists: false,
+      };
+    }
+  },
+
   getAllWorkers: async (filters?: { skills?: string; city?: string; district?: string; page?: number }) => {
     try {
       const params = new URLSearchParams();
@@ -210,6 +236,32 @@ export const profileService = {
       return {
         success: false,
         message: 'Failed to fetch profile',
+      };
+    }
+  },
+
+  checkEmployerVerification: async (firebaseUid: string) => {
+    try {
+      const response = await fetch(`${API_URL}/employer-profile/${firebaseUid}`);
+      const result = await response.json();
+      if (result.success && result.data) {
+        return {
+          success: true,
+          isVerified: result.data.isVerified || false,
+          profileExists: true,
+        };
+      }
+      return {
+        success: true,
+        isVerified: false,
+        profileExists: false,
+      };
+    } catch (error) {
+      console.error('Error checking employer verification:', error);
+      return {
+        success: false,
+        isVerified: false,
+        profileExists: false,
       };
     }
   },

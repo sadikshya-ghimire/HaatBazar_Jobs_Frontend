@@ -135,7 +135,7 @@ const ResetPasswordPage = ({
               onPress={handleResetPassword}
               className="py-4 rounded-xl active:opacity-90"
               style={{
-                backgroundColor: '#447788',
+                backgroundColor: '#1e293b',
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
@@ -150,7 +150,7 @@ const ResetPasswordPage = ({
 
             <View className="items-center mt-6">
               <Pressable onPress={onChangeContact}>
-                <Text className="text-sm" style={{ color: '#447788' }}>
+                <Text className="text-sm" style={{ color: '#1e293b' }}>
                   Change {resetMethod === 'phone' ? 'phone number' : 'email'}
                 </Text>
               </Pressable>

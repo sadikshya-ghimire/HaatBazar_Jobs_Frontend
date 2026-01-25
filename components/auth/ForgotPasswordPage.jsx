@@ -3,9 +3,12 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
-  SafeAreaView,
+  TouchableOpacity,
+  StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Image as RNImage,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,174 +26,312 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={['#447788', '#628BB5', '#B5DBE1']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="px-6 py-6"
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <LinearGradient
+        colors={['#2c3e50', '#34495e', '#3d5a6c']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row items-center mb-4">
-            <Pressable onPress={onBack} className="mr-4">
-              <Ionicons name="arrow-back" size={24} color="#ffffff" />
-            </Pressable>
-            <Text className="text-white text-xl font-bold">Forgot Password</Text>
-          </View>
-          <Text className="text-white text-sm">We'll send you a reset code</Text>
-        </LinearGradient>
+          {/* Back Button */}
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
 
-        <View className="items-center px-6 py-8">
-          <View className="w-full" style={{ maxWidth: 500 }}>
-            <Text className="text-gray-700 text-sm mb-3">Send reset code via:</Text>
-            <View className="flex-row gap-3 mb-6">
-              <Pressable
+          {/* Brand Icon */}
+          <View style={styles.brandBadge}>
+            <RNImage 
+              source={require('../../assets/Icon.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.brandTitle}>HaatBazar Jobs</Text>
+
+          {/* Title */}
+          <Text style={styles.welcomeTitle}>Forgot Password?</Text>
+          <Text style={styles.welcomeSubtitle}>We'll send you a reset code</Text>
+
+          {/* Reset Card */}
+          <View style={styles.resetCard}>
+            {/* Method Toggle */}
+            <View style={styles.methodToggle}>
+              <TouchableOpacity
                 onPress={() => setResetMethod('phone')}
-                className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
-                style={{
-                  backgroundColor: resetMethod === 'phone' ? '#447788' : '#ffffff',
-                  borderWidth: 1,
-                  borderColor: resetMethod === 'phone' ? '#447788' : '#e5e7eb',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
+                style={[
+                  styles.methodButton,
+                  resetMethod === 'phone' && styles.methodButtonActive
+                ]}
               >
                 <Ionicons
                   name="call"
                   size={18}
-                  color={resetMethod === 'phone' ? '#ffffff' : '#6b7280'}
+                  color={resetMethod === 'phone' ? '#fff' : '#64748b'}
                   style={{ marginRight: 6 }}
                 />
-                <Text
-                  className="font-semibold"
-                  style={{ color: resetMethod === 'phone' ? '#ffffff' : '#6b7280' }}
-                >
+                <Text style={[
+                  styles.methodButtonText,
+                  resetMethod === 'phone' && styles.methodButtonTextActive
+                ]}>
                   Phone
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
 
-              <Pressable
+              <TouchableOpacity
                 onPress={() => setResetMethod('email')}
-                className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
-                style={{
-                  backgroundColor: resetMethod === 'email' ? '#447788' : '#ffffff',
-                  borderWidth: 1,
-                  borderColor: resetMethod === 'email' ? '#447788' : '#e5e7eb',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
+                style={[
+                  styles.methodButton,
+                  resetMethod === 'email' && styles.methodButtonActive
+                ]}
               >
                 <Ionicons
                   name="mail"
                   size={18}
-                  color={resetMethod === 'email' ? '#ffffff' : '#6b7280'}
+                  color={resetMethod === 'email' ? '#fff' : '#64748b'}
                   style={{ marginRight: 6 }}
                 />
-                <Text
-                  className="font-semibold"
-                  style={{ color: resetMethod === 'email' ? '#ffffff' : '#6b7280' }}
-                >
+                <Text style={[
+                  styles.methodButtonText,
+                  resetMethod === 'email' && styles.methodButtonTextActive
+                ]}>
                   Email
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
 
+            {/* Input Fields */}
             {resetMethod === 'phone' ? (
-              <>
-                <Text className="text-gray-700 text-sm mb-2">Phone Number</Text>
-                <View
-                  className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-2"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: '#e5e7eb',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                >
-                  <Ionicons name="call-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Phone Number</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="call-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
                     placeholder="98XXXXXXXX"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
+                    style={styles.input}
+                    placeholderTextColor="#94a3b8"
                     keyboardType="phone-pad"
                   />
                 </View>
-                <Text className="text-gray-500 text-xs mb-6">
+                <Text style={styles.helperText}>
                   We'll send a verification code via SMS
                 </Text>
-              </>
+              </View>
             ) : (
-              <>
-                <Text className="text-gray-700 text-sm mb-2">Email</Text>
-                <View
-                  className="bg-white rounded-xl px-4 py-4 flex-row items-center mb-2"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: '#e5e7eb',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                >
-                  <Ionicons name="mail-outline" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Enter your email"
                     value={email}
                     onChangeText={setEmail}
-                    className="flex-1 text-gray-700"
-                    placeholderTextColor="#9ca3af"
+                    style={styles.input}
+                    placeholderTextColor="#94a3b8"
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
                 </View>
-                <Text className="text-gray-500 text-xs mb-6">
+                <Text style={styles.helperText}>
                   We'll send a verification code via email
                 </Text>
-              </>
+              </View>
             )}
 
-            <Pressable
+            {/* Send Code Button */}
+            <TouchableOpacity
               onPress={handleSendCode}
-              className="py-4 rounded-xl active:opacity-90 flex-row items-center justify-center"
-              style={{
-                backgroundColor: '#447788',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 6,
-              }}
+              style={styles.sendButton}
+              activeOpacity={0.8}
             >
-              <Ionicons name="paper-plane-outline" size={18} color="#ffffff" style={{ marginRight: 8 }} />
-              <Text className="text-white text-center font-bold text-base">
-                Send Code
-              </Text>
-            </Pressable>
+              <Ionicons name="paper-plane-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
+              <Text style={styles.sendButtonText}>Send Code</Text>
+            </TouchableOpacity>
 
-            <View className="items-center mt-8">
-              <Pressable onPress={onBackToLogin} className="flex-row items-center">
-                <Ionicons name="arrow-back" size={16} color="#6b7280" style={{ marginRight: 6 }} />
-                <Text className="text-gray-600 text-sm">Back to Login</Text>
-              </Pressable>
-            </View>
+            {/* Back to Login */}
+            <TouchableOpacity onPress={onBackToLogin} style={styles.backToLoginButton}>
+              <Ionicons name="arrow-back" size={16} color="#64748b" style={{ marginRight: 6 }} />
+              <Text style={styles.backToLoginText}>Back to Login</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </LinearGradient>
+    </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandBadge: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  logoImage: {
+    width: 60,
+    height: 60,
+  },
+  brandTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 32,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  resetCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  methodToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 24,
+  },
+  methodButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  methodButtonActive: {
+    backgroundColor: '#1e293b',
+  },
+  methodButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  methodButtonTextActive: {
+    color: '#fff',
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 16,
+    height: 52,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 6,
+  },
+  sendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginTop: 8,
+    shadowColor: '#1e293b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sendButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  backToLoginButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    paddingVertical: 12,
+  },
+  backToLoginText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+});
 
 export default ForgotPasswordPage;

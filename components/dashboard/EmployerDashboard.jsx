@@ -1,797 +1,2237 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  Pressable,
+  TouchableOpacity,
+  SafeAreaView,
+  StyleSheet,
+  StatusBar,
+  Image as RNImage,
   Modal,
   TextInput,
-  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { auth } from '../config/firebase';
+import { jobOfferService } from '../services/jobOfferService';
+import { profileService } from '../services/profileService';
+import { API_CONFIG } from '../config/api.config';
 
-export default function EmployerDashboard({ onLogout, userName = 'Priya' }) {
+export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [selectedTab, setSelectedTab] = useState('home');
-  const [showPostJobModal, setShowPostJobModal] = useState(false);
-  const [isUrgent, setIsUrgent] = useState(false);
-  const [jobTitle, setJobTitle] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [location, setLocation] = useState('');
-  const [district, setDistrict] = useState('');
-  const [budget, setBudget] = useState('');
-  const [paymentType, setPaymentType] = useState('Daily');
-  const [duration, setDuration] = useState('');
+  const [showJobPostModal, setShowJobPostModal] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+  const [customAlert, setCustomAlert] = useState({ visible: false, type: 'success', title: '', message: '' });
+  const [showPaymentTypeModal, setShowPaymentTypeModal] = useState(false);
+  const [durationMode, setDurationMode] = useState('simple'); // 'simple' or 'detailed'
+  const [isVerified, setIsVerified] = useState(false);
+  const [profileExists, setProfileExists] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [availableWorkers, setAvailableWorkers] = useState([]);
+  const [postedJobs, setPostedJobs] = useState([]);
+  const [jobForm, setJobForm] = useState({
+    title: '',
+    description: '',
+    requiredSkills: [],
+    area: '',
+    district: '',
+    budget: '',
+    paymentType: 'Daily',
+    duration: '',
+    detailedDuration: {
+      Monday: { needed: false, from: '', to: '' },
+      Tuesday: { needed: false, from: '', to: '' },
+      Wednesday: { needed: false, from: '', to: '' },
+      Thursday: { needed: false, from: '', to: '' },
+      Friday: { needed: false, from: '', to: '' },
+      Saturday: { needed: false, from: '', to: '' },
+      Sunday: { needed: false, from: '', to: '' },
+    },
+    markAsUrgent: false,
+  });
 
-  const employerName = userName;
-  const unreadMessages = 3;
-
-  // Profile data
-  const profileData = {
-    name: 'Your Name',
-    role: 'Employer',
-    postedJobs: 2,
-    hiredWorkers: 2,
-    memberSince: 'Jan 2024',
-  };
-
-  // Messages data
-  const messages = [
-    {
-      id: 1,
-      workerName: 'Krishna Lama',
-      jobTitle: 'House Painting',
-      lastMessage: '',
-      time: '08:23 AM',
-      unreadCount: 1,
-      avatar: '👤',
-    },
-    {
-      id: 2,
-      workerName: 'Maya Rai',
-      jobTitle: 'Office Cleaning',
-      lastMessage: '',
-      time: '08:20 AM',
-      unreadCount: 0,
-      avatar: '👤',
-    },
-  ];
-
-  // My Posted Jobs data
-  const myPostedJobs = [
-    {
-      id: 1,
-      title: 'Emergency Plumbing Repair',
-      skills: ['Plumber', 'Pipe Fitting'],
-      applicants: 12,
-      status: 'Active',
-      postedDate: 'Posted Dec 28, 2024',
-      isUrgent: true,
-    },
-    {
-      id: 2,
-      title: 'Carpenter for Kitchen Renovation',
-      skills: ['Carpenter', 'Furniture'],
-      applicants: 5,
-      status: 'Active',
-      postedDate: 'Posted Dec 24, 2024',
-      isUrgent: false,
-    },
-    {
-      id: 3,
-      title: 'Math Tutor Needed',
-      skills: ['Tutor', 'Mathematics'],
-      applicants: 8,
-      status: 'Closed',
-      postedDate: 'Posted Dec 22, 2024',
-      isUrgent: false,
-    },
-  ];
-
-  // Hired Workers data
-  const hiredWorkers = [
-    {
-      id: 1,
-      name: 'Mohan Bahadur',
-      jobTitle: 'House Painting',
-      location: 'Thamel, Kathmandu',
-      rate: 'Rs. 1600/day',
-      status: 'Ongoing',
-      hiredDate: 'Hired Dec 26, 2024',
-      hasNewMessage: true,
-    },
-    {
-      id: 2,
-      name: 'Maya Rai',
-      jobTitle: 'Office Cleaning',
-      location: 'Durbar Marg, Kathmandu',
-      rate: 'Rs. 1200/month',
-      status: 'Ongoing',
-      hiredDate: 'Hired Dec 25, 2024',
-      hasNewMessage: false,
-    },
-  ];
-
-  // Available workers data
-  const availableWorkers = [
-    {
-      id: 1,
-      name: 'Ram Bahadur',
-      skills: 'Professional Plumbing Services',
-      location: 'Thapathali, Kathmandu',
-      rating: 4.8,
-      jobs: '45 Jobs',
-      experience: '5 years',
-      hourlyRate: '1500 Rs./day',
-      isAvailable: true,
-    },
-    {
-      id: 2,
-      name: 'Hari Shrestha',
-      skills: 'Expert Electrician Available',
-      location: 'Patan, Lalitpur',
-      rating: 4.7,
-      jobs: '38 Jobs',
-      experience: '4 years',
-      hourlyRate: '1400 Rs./day',
-      isAvailable: true,
-    },
-    {
-      id: 3,
-      name: 'Sita Tamang',
-      skills: 'Skilled Carpenter for Custom Furniture',
-      location: 'Bhaktapur',
-      rating: 4.9,
-      jobs: '52 Jobs',
-      experience: '6 years',
-      hourlyRate: '1600 Rs./day',
-      isAvailable: false,
-    },
-    {
-      id: 4,
-      name: 'Arjun Sharma',
-      skills: 'Mathematics & Science Tutor',
-      location: 'Lazimpat, Kathmandu',
-      rating: 4.5,
-      jobs: '32 Jobs',
-      experience: '3 years',
-      hourlyRate: '800 Rs./hourly',
-      isAvailable: true,
-    },
-  ];
-
-  const availableSkills = [
+  const skillOptions = [
     'Plumber', 'Electrician', 'Carpenter', 'Tailor',
     'Tutor', 'Painter', 'Mechanic', 'Cleaner',
     'Gardener', 'Driver', 'Mason', 'Welder',
-    'Cook', 'Security Guard', 'Babysitter',
+    'Cook', 'Security Guard', 'Babysitter'
   ];
 
-  const toggleSkill = (skill) => {
-    if (selectedSkills.includes(skill)) {
-      setSelectedSkills(selectedSkills.filter(s => s !== skill));
-    } else {
-      setSelectedSkills([...selectedSkills, skill]);
+  useEffect(() => {
+    checkVerificationStatus();
+    fetchProfileData();
+    fetchAvailableWorkers();
+    fetchPostedJobs();
+  }, []);
+
+  const fetchProfileData = async () => {
+    const firebaseUid = auth.currentUser?.uid;
+    if (firebaseUid) {
+      const result = await profileService.getEmployerProfile(firebaseUid);
+      if (result.success && result.data) {
+        // Construct full URL for profile photo if it exists
+        const data = { ...result.data };
+        if (data.profilePhoto && !data.profilePhoto.startsWith('http')) {
+          data.profilePhoto = `${API_CONFIG.BASE_URL}${data.profilePhoto}`;
+        }
+        setProfileData(data);
+      }
     }
   };
 
-  const handlePostJob = () => {
-    console.log('Posting job:', {
-      jobTitle,
-      jobDescription,
-      selectedSkills,
-      location,
-      district,
-      budget,
-      paymentType,
-      duration,
-      isUrgent,
-    });
-    // Reset form
-    setJobTitle('');
-    setJobDescription('');
-    setSelectedSkills([]);
-    setLocation('');
-    setDistrict('');
-    setBudget('');
-    setPaymentType('Daily');
-    setDuration('');
-    setIsUrgent(false);
-    setShowPostJobModal(false);
+  const checkVerificationStatus = async () => {
+    const firebaseUid = auth.currentUser?.uid;
+    if (firebaseUid) {
+      const result = await profileService.checkEmployerVerification(firebaseUid);
+      setIsVerified(result.isVerified);
+      setProfileExists(result.profileExists);
+    }
   };
 
+  const fetchAvailableWorkers = async () => {
+    try {
+      const result = await jobOfferService.getAllActiveWorkerJobOffers();
+      if (result.success && result.data) {
+        setAvailableWorkers(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching available workers:', error);
+    }
+  };
+
+  const fetchPostedJobs = async () => {
+    try {
+      const firebaseUid = auth.currentUser?.uid;
+      if (firebaseUid) {
+        const result = await jobOfferService.getEmployerJobOffers(firebaseUid);
+        if (result.success && result.data) {
+          setPostedJobs(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching posted jobs:', error);
+    }
+  };
+
+  const showAlert = (type, title, message) => {
+    setCustomAlert({ visible: true, type, title, message });
+  };
+
+  const hideAlert = () => {
+    setCustomAlert({ visible: false, type: '', title: '', message: '' });
+  };
+
+  const handleActionWithVerification = (action) => {
+    if (!profileExists || !isVerified) {
+      showAlert('warning', 'Account Under Review', 'Your account is currently under review by our admin team. You will be able to access all features once your profile is verified.');
+      return false;
+    }
+    action();
+    return true;
+  };
+
+  const toggleSkill = (skill) => {
+    if (jobForm.requiredSkills.includes(skill)) {
+      setJobForm({
+        ...jobForm,
+        requiredSkills: jobForm.requiredSkills.filter(s => s !== skill)
+      });
+    } else {
+      setJobForm({
+        ...jobForm,
+        requiredSkills: [...jobForm.requiredSkills, skill]
+      });
+    }
+  };
+
+  const updateDayDuration = (day, field, value) => {
+    setJobForm({
+      ...jobForm,
+      detailedDuration: {
+        ...jobForm.detailedDuration,
+        [day]: {
+          ...jobForm.detailedDuration[day],
+          [field]: value,
+        },
+      },
+    });
+  };
+
+  const handlePostJob = async () => {
+    // Validation
+    if (!jobForm.title || !jobForm.description || jobForm.requiredSkills.length === 0 || 
+        !jobForm.area || !jobForm.district || !jobForm.budget) {
+      showAlert('error', 'Error', 'Please fill in all required fields');
+      return;
+    }
+
+    // Validate duration
+    if (durationMode === 'simple' && !jobForm.duration) {
+      showAlert('error', 'Error', 'Please specify the job duration');
+      return;
+    }
+
+    if (durationMode === 'detailed') {
+      const hasDuration = Object.values(jobForm.detailedDuration).some(day => day.needed);
+      if (!hasDuration) {
+        showAlert('error', 'Error', 'Please select at least one day when worker is needed');
+        return;
+      }
+    }
+
+    try {
+      setIsPosting(true);
+      const firebaseUid = auth.currentUser?.uid;
+      
+      if (!firebaseUid) {
+        showAlert('error', 'Error', 'User not authenticated');
+        setIsPosting(false);
+        return;
+      }
+
+      // Prepare duration data
+      const durationData = durationMode === 'simple' 
+        ? jobForm.duration 
+        : jobForm.detailedDuration;
+
+      const result = await jobOfferService.createEmployerJobOffer(firebaseUid, {
+        ...jobForm,
+        duration: durationData,
+      });
+
+      if (result.success) {
+        showAlert('success', 'Success', 'Job posted successfully!');
+        setShowJobPostModal(false);
+        setDurationMode('simple');
+        setJobForm({
+          title: '',
+          description: '',
+          requiredSkills: [],
+          area: '',
+          district: '',
+          budget: '',
+          paymentType: 'Daily',
+          duration: '',
+          detailedDuration: {
+            Monday: { needed: false, from: '', to: '' },
+            Tuesday: { needed: false, from: '', to: '' },
+            Wednesday: { needed: false, from: '', to: '' },
+            Thursday: { needed: false, from: '', to: '' },
+            Friday: { needed: false, from: '', to: '' },
+            Saturday: { needed: false, from: '', to: '' },
+            Sunday: { needed: false, from: '', to: '' },
+          },
+          markAsUrgent: false,
+        });
+        // Refresh the posted jobs list and profile data
+        fetchPostedJobs();
+        fetchProfileData();
+      } else {
+        showAlert('error', 'Error', result.message || 'Failed to post job');
+      }
+    } catch (error) {
+      console.error('Error posting job:', error);
+      showAlert('error', 'Error', 'An error occurred while posting the job');
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const hiredWorkers = [
+    {
+      id: 1,
+      name: 'Rajesh Thapa',
+      profession: 'Painter',
+      jobTitle: 'House Painting Project',
+      salary: 'NPR 1500/day',
+      status: 'Working',
+      startDate: 'Dec 28, 2024',
+    },
+    {
+      id: 2,
+      name: 'Kopila Sharma',
+      profession: 'Cleaner',
+      jobTitle: 'Office Cleaning',
+      salary: 'NPR 12000/month',
+      status: 'Working',
+      startDate: 'Dec 20, 2024',
+    },
+  ];
+
+  const stats = [
+    { label: 'Posted Jobs', value: postedJobs.length.toString(), icon: 'briefcase', color: '#3b82f6' },
+    { label: 'Available Workers', value: availableWorkers.length.toString(), icon: 'people', color: '#10b981' },
+    { label: 'Approved Jobs', value: postedJobs.filter(j => j.isApproved).length.toString(), icon: 'checkmark-circle', color: '#f59e0b' },
+    { label: 'Pending Jobs', value: postedJobs.filter(j => !j.isApproved).length.toString(), icon: 'time', color: '#8b5cf6' },
+  ];
+
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header with Gradient */}
-      <LinearGradient
-        colors={['#447788', '#628BB5', '#B5DBE1']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="px-6 pt-12 pb-6"
-        style={{ elevation: 4 }}
-      >
-        <View className="flex-row justify-between items-center mb-2">
-          <View>
-            <Text className="text-white text-sm opacity-90">Welcome Back!</Text>
-            <Text className="text-white text-2xl font-bold mt-1">{employerName}</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1e293b" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.logoContainer}>
+            <RNImage 
+              source={require('../../assets/Icon.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
-          <View className="flex-row gap-4">
-            <Pressable className="relative">
-              <Ionicons name="notifications-outline" size={28} color="#ffffff" />
-              <View className="absolute -top-1 -right-1 bg-red-500 w-5 h-5 rounded-full items-center justify-center">
-                <Text className="text-white text-xs font-bold">2</Text>
-              </View>
-            </Pressable>
-            <Pressable onPress={() => setShowPostJobModal(true)}>
-              <Ionicons name="add-circle" size={28} color="#ffffff" />
-            </Pressable>
-            <Pressable onPress={onLogout}>
-              <Ionicons name="log-out-outline" size={28} color="#ffffff" />
-            </Pressable>
+          <View style={styles.headerText}>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.userName}>{userName}</Text>
           </View>
         </View>
-      </LinearGradient>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => handleActionWithVerification(() => setShowJobPostModal(true))}>
+            <Ionicons name="add-circle-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="notifications-outline" size={24} color="#fff" />
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>3</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={onLogout}>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-      {/* Available Workers Section */}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {selectedTab === 'home' ? (
-          <View className="px-6 py-6">
-            <Text className="text-gray-900 text-xl font-bold mb-4">Available Workers</Text>
-            
-            <View className="gap-4">
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Verification Status Banner */}
+        {profileExists && !isVerified && (
+          <View style={styles.verificationBanner}>
+            <View style={styles.verificationBannerContent}>
+              <Ionicons name="time-outline" size={24} color="#f59e0b" />
+              <View style={styles.verificationBannerText}>
+                <Text style={styles.verificationBannerTitle}>Account Under Review</Text>
+                <Text style={styles.verificationBannerMessage}>
+                  Your profile is being verified by our admin team. Full access will be granted once approved.
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {selectedTab === 'home' && (
+          <>
+            {/* Stats Grid */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Your Stats</Text>
+              <View style={styles.statsGrid}>
+                {stats.map((stat, index) => (
+                  <View key={index} style={styles.statCard}>
+                    <View style={[styles.statIcon, { backgroundColor: stat.color + '20' }]}>
+                      <Ionicons name={stat.icon} size={24} color={stat.color} />
+                    </View>
+                    <Text style={styles.statValue}>{stat.value}</Text>
+                    <Text style={styles.statLabel}>{stat.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Available Workers */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Available Workers</Text>
+                <TouchableOpacity onPress={() => handleActionWithVerification(() => {
+                  // See all logic
+                })}>
+                  <Text style={styles.seeAllText}>See All</Text>
+                </TouchableOpacity>
+              </View>
+              
               {availableWorkers.map((worker) => (
-                <View 
-                  key={worker.id} 
-                  className="bg-white rounded-2xl p-5 shadow-md" 
-                  style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                >
-                  {/* Available Badge */}
-                  {worker.isAvailable && (
-                    <View className="bg-green-500 self-start px-3 py-1 rounded-full mb-3">
-                      <Text className="text-white text-xs font-bold">AVAILABLE NOW</Text>
+                <View key={worker._id} style={styles.workerCard}>
+                  <View style={styles.workerHeader}>
+                    <View style={styles.workerAvatar}>
+                      {worker.workerProfile?.profilePhoto ? (
+                        <RNImage 
+                          source={{ uri: `${API_CONFIG.BASE_URL}${worker.workerProfile.profilePhoto}` }} 
+                          style={styles.workerAvatarImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <Ionicons name="person" size={32} color="#1e293b" />
+                      )}
                     </View>
-                  )}
-
-                  {/* Worker Name */}
-                  <Text className="text-gray-900 text-lg font-bold mb-2">{worker.name}</Text>
-
-                  {/* Skills */}
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="construct-outline" size={16} color="#6B7280" />
-                    <Text className="text-gray-600 text-sm ml-2">{worker.skills}</Text>
-                  </View>
-
-                  {/* Location */}
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="location-outline" size={16} color="#6B7280" />
-                    <Text className="text-gray-600 text-sm ml-2">{worker.location}</Text>
-                  </View>
-
-                  {/* Rating and Experience */}
-                  <View className="flex-row justify-between items-center mb-4">
-                    <View className="flex-row items-center">
-                      <Ionicons name="star" size={16} color="#FCD34D" />
-                      <Text className="text-gray-700 text-sm font-bold ml-1">{worker.rating}</Text>
-                      <Text className="text-gray-500 text-sm ml-2">• {worker.jobs}</Text>
-                    </View>
-                    <Text className="text-gray-600 text-sm">{worker.experience} experience</Text>
-                  </View>
-
-                  {/* Hourly Rate */}
-                  <View className="flex-row items-center mb-4">
-                    <Ionicons name="cash-outline" size={16} color="#447788" />
-                    <Text className="text-[#447788] text-base font-bold ml-2">{worker.hourlyRate}</Text>
-                  </View>
-
-                  {/* Hire Button */}
-                  <Pressable 
-                    className="bg-[#447788] py-3 rounded-xl active:bg-[#447788]"
-                    onPress={() => console.log('Hire worker:', worker.id)}
-                  >
-                    <Text className="text-white text-center font-bold text-base">Hire Now</Text>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : selectedTab === 'myJobs' ? (
-          <View className="px-6 py-6">
-            {/* My Posted Jobs Section */}
-            <Text className="text-gray-900 text-xl font-bold mb-4">My Posted Jobs</Text>
-            
-            <View className="gap-4 mb-8">
-              {myPostedJobs.map((job) => (
-                <View 
-                  key={job.id} 
-                  className="bg-white rounded-2xl p-5 shadow-md" 
-                  style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                >
-                  {/* Urgent Badge */}
-                  {job.isUrgent && (
-                    <View className="bg-red-500 self-start px-3 py-1 rounded-full mb-3">
-                      <Text className="text-white text-xs font-bold">URGENT</Text>
-                    </View>
-                  )}
-
-                  {/* Job Title */}
-                  <Text className="text-gray-900 text-lg font-bold mb-3">{job.title}</Text>
-
-                  {/* Skills Tags */}
-                  <View className="flex-row flex-wrap gap-2 mb-3">
-                    {job.skills.map((skill, index) => (
-                      <View key={index} className="bg-[#D5DEEF] px-3 py-1 rounded-full">
-                        <Text className="text-[#447788] text-xs font-bold">{skill}</Text>
-                      </View>
-                    ))}
-                  </View>
-
-                  {/* Applicants and Status */}
-                  <View className="flex-row justify-between items-center mb-3">
-                    <Text className="text-gray-600 text-sm">{job.applicants} applicant(s)</Text>
-                    <View className={`px-3 py-1 rounded-full ${job.status === 'Active' ? 'bg-green-100' : 'bg-gray-100'}`}>
-                      <Text className={`text-xs font-bold ${job.status === 'Active' ? 'text-green-700' : 'text-gray-600'}`}>
-                        {job.status}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Posted Date */}
-                  <Text className="text-gray-500 text-xs mb-4">{job.postedDate}</Text>
-
-                  {/* View Applicants Button */}
-                  <Pressable 
-                    className="bg-[#447788] py-3 rounded-xl active:bg-[#447788]"
-                    onPress={() => console.log('View applicants for job:', job.id)}
-                  >
-                    <Text className="text-white text-center font-bold text-base">View Applicants</Text>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-
-            {/* Hired Workers Section */}
-            <Text className="text-gray-900 text-xl font-bold mb-4">Hired Workers</Text>
-            
-            <View className="gap-4">
-              {hiredWorkers.map((worker) => (
-                <View 
-                  key={worker.id} 
-                  className="bg-white rounded-2xl p-5 shadow-md" 
-                  style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                >
-                  {/* Worker Icon and Name */}
-                  <View className="flex-row items-center mb-3">
-                    <View className="w-12 h-12 rounded-full bg-[#D5DEEF] items-center justify-center mr-3">
-                      <Ionicons name="person" size={24} color="#447788" />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-gray-900 text-lg font-bold">{worker.name}</Text>
-                      <Text className="text-gray-600 text-sm">{worker.jobTitle}</Text>
-                    </View>
-                    {worker.status === 'Ongoing' && (
-                      <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-700 text-xs font-bold">{worker.status}</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Location */}
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="location-outline" size={16} color="#6B7280" />
-                    <Text className="text-gray-600 text-sm ml-2">{worker.location}</Text>
-                  </View>
-
-                  {/* Rate */}
-                  <View className="flex-row items-center mb-3">
-                    <Ionicons name="cash-outline" size={16} color="#447788" />
-                    <Text className="text-[#447788] text-base font-bold ml-2">{worker.rate}</Text>
-                  </View>
-
-                  {/* Hired Date */}
-                  <Text className="text-gray-500 text-xs mb-4">{worker.hiredDate}</Text>
-
-                  {/* Chat Button */}
-                  <Pressable 
-                    className="bg-[#447788] py-3 rounded-xl active:bg-[#447788] flex-row items-center justify-center"
-                    onPress={() => console.log('Chat with worker:', worker.id)}
-                  >
-                    <Ionicons name="chatbubbles-outline" size={20} color="#FFFFFF" />
-                    <Text className="text-white font-bold text-base ml-2">Chat</Text>
-                    {worker.hasNewMessage && (
-                      <View className="bg-red-500 w-2 h-2 rounded-full ml-2" />
-                    )}
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : selectedTab === 'messages' ? (
-          <View className="px-6 py-6">
-            <Text className="text-gray-900 text-xl font-bold mb-4">Messages</Text>
-            
-            <View className="gap-3">
-              {messages.map((message) => (
-                <Pressable
-                  key={message.id}
-                  className="bg-white rounded-2xl p-4 shadow-md active:bg-gray-50"
-                  style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                  onPress={() => console.log('Open chat with:', message.workerName)}
-                >
-                  <View className="flex-row items-center">
-                    {/* Avatar */}
-                    <View className="w-12 h-12 rounded-full bg-[#D5DEEF] items-center justify-center mr-3">
-                      <Text className="text-2xl">{message.avatar}</Text>
-                    </View>
-
-                    {/* Message Info */}
-                    <View className="flex-1">
-                      <Text className="text-gray-900 text-base font-bold mb-1">{message.workerName}</Text>
-                      <Text className="text-gray-600 text-sm">{message.jobTitle}</Text>
-                    </View>
-
-                    {/* Time and Unread Badge */}
-                    <View className="items-end">
-                      <Text className="text-gray-500 text-xs mb-2">{message.time}</Text>
-                      {message.unreadCount > 0 && (
-                        <View className="bg-[#447788] w-6 h-6 rounded-full items-center justify-center">
-                          <Text className="text-white text-xs font-bold">{message.unreadCount}</Text>
+                    <View style={styles.workerInfo}>
+                      <Text style={styles.workerName}>{worker.workerName}</Text>
+                      <Text style={styles.workerProfession}>{worker.skills.join(', ')}</Text>
+                      {worker.workerProfile?.rating > 0 && (
+                        <View style={styles.ratingContainer}>
+                          <Ionicons name="star" size={14} color="#f59e0b" />
+                          <Text style={styles.ratingText}>{worker.workerProfile.rating.toFixed(1)}</Text>
+                          {worker.workerProfile.completedJobs > 0 && (
+                            <Text style={styles.experienceText}>• {worker.workerProfile.completedJobs} jobs</Text>
+                          )}
                         </View>
                       )}
                     </View>
+                    <View style={styles.availableBadge}>
+                      <View style={styles.availableDot} />
+                      <Text style={styles.availableText}>Available</Text>
+                    </View>
                   </View>
-                </Pressable>
+                  <Text style={styles.jobTitle}>{worker.title}</Text>
+                  <Text style={styles.workerDescription} numberOfLines={2}>{worker.description}</Text>
+                  <View style={styles.workerDetails}>
+                    <View style={styles.workerDetailItem}>
+                      <Ionicons name="location-outline" size={16} color="#64748b" />
+                      <Text style={styles.workerDetailText}>{worker.area}, {worker.district}</Text>
+                    </View>
+                    <View style={styles.workerDetailItem}>
+                      <Ionicons name="cash-outline" size={16} color="#10b981" />
+                      <Text style={styles.workerRateText}>NPR {worker.rate}/{worker.rateType}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.workerActions}>
+                    <TouchableOpacity 
+                      style={styles.viewProfileButton}
+                      onPress={() => handleActionWithVerification(() => {
+                        // View profile logic
+                      })}
+                    >
+                      <Text style={styles.viewProfileText}>View Details</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.hireButton}
+                      onPress={() => handleActionWithVerification(() => {
+                        // Hire logic
+                      })}
+                    >
+                      <Text style={styles.hireButtonText}>Contact</Text>
+                      <Ionicons name="arrow-forward" size={16} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
               ))}
             </View>
-
-            {/* Empty State if no messages */}
-            {messages.length === 0 && (
-              <View className="items-center justify-center py-20">
-                <Ionicons name="chatbubbles-outline" size={64} color="#D1D5DB" />
-                <Text className="text-gray-500 text-lg mt-4">No Messages Yet</Text>
-                <Text className="text-gray-400 text-sm mt-2">Start hiring workers to chat with them</Text>
-              </View>
-            )}
-          </View>
-        ) : selectedTab === 'profile' ? (
-          <View className="px-6 py-6">
-            {/* Profile Header */}
-            <View className="items-center mb-8">
-              {/* Avatar */}
-              <View className="w-24 h-24 rounded-full bg-[#D5DEEF] items-center justify-center mb-4">
-                <Ionicons name="briefcase" size={40} color="#447788" />
-              </View>
-              
-              {/* Name and Role */}
-              <Text className="text-gray-900 text-2xl font-bold mb-1">{profileData.name}</Text>
-              <Text className="text-gray-600 text-base">{profileData.role}</Text>
-            </View>
-
-            {/* Stats Cards */}
-            <View className="gap-3 mb-6">
-              {/* Posted Jobs */}
-              <Pressable 
-                className="bg-white rounded-2xl p-4 shadow-md active:bg-gray-50 flex-row justify-between items-center"
-                style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                onPress={() => console.log('View posted jobs')}
-              >
-                <Text className="text-gray-700 text-base">Posted Jobs</Text>
-                <View className="flex-row items-center">
-                  <Text className="text-gray-900 text-lg font-bold mr-2">{profileData.postedJobs}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </View>
-              </Pressable>
-
-              {/* Hired Workers */}
-              <Pressable 
-                className="bg-white rounded-2xl p-4 shadow-md active:bg-gray-50 flex-row justify-between items-center"
-                style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                onPress={() => console.log('View hired workers')}
-              >
-                <Text className="text-gray-700 text-base">Hired Workers</Text>
-                <View className="flex-row items-center">
-                  <Text className="text-gray-900 text-lg font-bold mr-2">{profileData.hiredWorkers}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </View>
-              </Pressable>
-
-              {/* Member Since */}
-              <View 
-                className="bg-white rounded-2xl p-4 shadow-md flex-row justify-between items-center"
-                style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-              >
-                <Text className="text-gray-700 text-base">Member Since</Text>
-                <Text className="text-gray-900 text-base font-bold">{profileData.memberSince}</Text>
-              </View>
-            </View>
-
-            {/* Action Buttons */}
-            <View className="gap-3 mb-6">
-              {/* Edit Profile */}
-              <Pressable 
-                className="bg-white rounded-2xl p-4 shadow-md active:bg-gray-50 flex-row justify-between items-center"
-                style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                onPress={() => console.log('Edit profile')}
-              >
-                <Text className="text-gray-700 text-base">Edit Profile</Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </Pressable>
-
-              {/* Settings */}
-              <Pressable 
-                className="bg-white rounded-2xl p-4 shadow-md active:bg-gray-50 flex-row justify-between items-center"
-                style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-                onPress={() => console.log('Open settings')}
-              >
-                <Text className="text-gray-700 text-base">Settings</Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </Pressable>
-            </View>
-
-            {/* Logout Button */}
-            <Pressable 
-              className="bg-white rounded-2xl p-4 shadow-md active:bg-gray-50 items-center"
-              style={{ elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}
-              onPress={onLogout}
-            >
-              <Text className="text-red-500 text-base font-bold">Logout</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View className="px-6 py-6 items-center justify-center" style={{ minHeight: 400 }}>
-            <Ionicons name="construct-outline" size={64} color="#D1D5DB" />
-            <Text className="text-gray-500 text-lg mt-4">Coming Soon</Text>
-            <Text className="text-gray-400 text-sm mt-2">This section is under development</Text>
-          </View>
+          </>
         )}
-      </ScrollView>
 
-      {/* Post Job Modal */}
-      <Modal
-        visible={showPostJobModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowPostJobModal(false)}
-      >
-        <Pressable 
-          className="flex-1 bg-black/50 justify-center items-center px-4"
-          onPress={() => setShowPostJobModal(false)}
-        >
-          <Pressable 
-            className="bg-white rounded-3xl w-full" 
-            style={{ maxWidth: 450, maxHeight: '85%' }}
-            onPress={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header - Fixed at top */}
-            <View className="bg-[#447788] rounded-t-3xl px-6 py-4 flex-row justify-between items-center">
-              <Text className="text-white text-xl font-bold">Post a Job</Text>
-              <Pressable onPress={() => setShowPostJobModal(false)}>
-                <Ionicons name="close" size={28} color="#FFFFFF" />
-              </Pressable>
+        {selectedTab === 'myJobs' && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Posted Jobs</Text>
+              <TouchableOpacity 
+                style={styles.postJobButton}
+                onPress={() => handleActionWithVerification(() => setShowJobPostModal(true))}
+              >
+                <Ionicons name="add-circle" size={20} color="#fff" />
+                <Text style={styles.postJobText}>Post Job</Text>
+              </TouchableOpacity>
             </View>
-
-            {/* Scrollable Content */}
-            <ScrollView 
-              className="px-6 py-4" 
-              showsVerticalScrollIndicator={true}
-              bounces={false}
-            >
-              <Text className="text-gray-600 text-sm mb-4">Post a job to find skilled workers for your needs.</Text>
-
-              {/* Mark as Urgent */}
-              <View className="flex-row items-center justify-between mb-4 bg-red-50 p-3 rounded-xl">
-                <View className="flex-row items-center flex-1">
-                  <Ionicons name="alert-circle-outline" size={20} color="#EF4444" />
-                  <View className="ml-2 flex-1">
-                    <Text className="text-gray-900 font-bold text-sm">Mark as Urgent</Text>
-                    <Text className="text-gray-600 text-xs">Get faster responses from workers</Text>
+            
+            {postedJobs.map((job) => (
+              <View key={job._id} style={styles.jobCard}>
+                <View style={styles.jobHeader}>
+                  <Text style={styles.jobTitle}>{job.title}</Text>
+                  <View style={[styles.statusBadge, !job.isApproved && styles.pendingBadge]}>
+                    <Text style={styles.statusText}>{job.isApproved ? 'Approved' : 'Pending Review'}</Text>
                   </View>
                 </View>
-                <Switch
-                  value={isUrgent}
-                  onValueChange={setIsUrgent}
-                  trackColor={{ false: '#D1D5DB', true: '#447788' }}
-                  thumbColor={isUrgent ? '#FFFFFF' : '#F3F4F6'}
+                <Text style={styles.jobDescription} numberOfLines={2}>{job.description}</Text>
+                <View style={styles.jobInfo}>
+                  <Ionicons name="construct-outline" size={16} color="#64748b" />
+                  <Text style={styles.jobInfoText}>{job.requiredSkills.join(', ')}</Text>
+                </View>
+                <View style={styles.jobInfo}>
+                  <Ionicons name="location-outline" size={16} color="#64748b" />
+                  <Text style={styles.jobInfoText}>{job.area}, {job.district}</Text>
+                </View>
+                <View style={styles.jobFooter}>
+                  <View style={styles.budgetContainer}>
+                    <Ionicons name="cash-outline" size={16} color="#10b981" />
+                    <Text style={styles.budgetText}>NPR {job.budget}/{job.paymentType}</Text>
+                  </View>
+                  <Text style={styles.postedText}>{new Date(job.createdAt).toLocaleDateString()}</Text>
+                </View>
+                {job.isApproved && (
+                  <View style={styles.applicantsContainer}>
+                    <Ionicons name="people-outline" size={18} color="#3b82f6" />
+                    <Text style={styles.applicantsText}>{job.applicants?.length || 0} Applicants</Text>
+                  </View>
+                )}
+                {!job.isApproved && (
+                  <View style={styles.pendingNotice}>
+                    <Ionicons name="time-outline" size={16} color="#f59e0b" />
+                    <Text style={styles.pendingNoticeText}>Waiting for admin approval</Text>
+                  </View>
+                )}
+                <View style={styles.jobActions}>
+                  <TouchableOpacity 
+                    style={styles.viewApplicantsButton}
+                    onPress={() => handleActionWithVerification(() => {
+                      // View applicants logic
+                    })}
+                    disabled={!job.isApproved}
+                  >
+                    <Text style={[styles.viewApplicantsText, !job.isApproved && styles.disabledText]}>View Applicants</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={() => handleActionWithVerification(() => {
+                      // Edit logic
+                    })}
+                  >
+                    <Ionicons name="create-outline" size={18} color="#64748b" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={() => handleActionWithVerification(() => {
+                      // Delete logic
+                    })}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {selectedTab === 'hired' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Hired Workers</Text>
+            
+            {hiredWorkers.map((worker) => (
+              <View key={worker.id} style={styles.hiredCard}>
+                <View style={styles.hiredHeader}>
+                  <View style={styles.hiredAvatar}>
+                    <Ionicons name="person" size={28} color="#1e293b" />
+                  </View>
+                  <View style={styles.hiredInfo}>
+                    <Text style={styles.hiredName}>{worker.name}</Text>
+                    <Text style={styles.hiredProfession}>{worker.profession}</Text>
+                  </View>
+                  <View style={styles.workingBadge}>
+                    <View style={styles.workingDot} />
+                    <Text style={styles.workingText}>{worker.status}</Text>
+                  </View>
+                </View>
+                <View style={styles.hiredJobInfo}>
+                  <Text style={styles.hiredJobTitle}>{worker.jobTitle}</Text>
+                </View>
+                <View style={styles.hiredDetails}>
+                  <View>
+                    <Text style={styles.detailLabel}>Salary</Text>
+                    <Text style={styles.detailValue}>{worker.salary}</Text>
+                  </View>
+                  <View style={styles.detailRight}>
+                    <Text style={styles.detailLabel}>Start Date</Text>
+                    <Text style={styles.detailValue}>{worker.startDate}</Text>
+                  </View>
+                </View>
+                <View style={styles.hiredActions}>
+                  <TouchableOpacity 
+                    style={styles.chatButton}
+                    onPress={() => handleActionWithVerification(() => {
+                      // Chat logic
+                    })}
+                  >
+                    <Ionicons name="chatbubbles-outline" size={18} color="#fff" />
+                    <Text style={styles.chatButtonText}>Chat</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.viewDetailsButton}
+                    onPress={() => handleActionWithVerification(() => {
+                      // View details logic
+                    })}
+                  >
+                    <Text style={styles.viewDetailsText}>View Details</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {selectedTab === 'profile' && (
+          <View style={styles.section}>
+            <View style={styles.profileHeader}>
+              <View style={styles.avatarContainer}>
+                {profileData?.profilePhoto ? (
+                  <RNImage 
+                    source={{ uri: profileData.profilePhoto }} 
+                    style={styles.profileImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Ionicons name="business" size={48} color="#1e293b" />
+                )}
+              </View>
+              <Text style={styles.profileName}>{profileData?.fullName || userName}</Text>
+              <Text style={styles.profileRole}>Employer</Text>
+              {isVerified && (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                  <Text style={styles.verifiedText}>Verified</Text>
+                </View>
+              )}
+            </View>
+
+            {profileData && (
+              <View style={styles.profileInfoCard}>
+                <View style={styles.profileInfoRow}>
+                  <Ionicons name="mail-outline" size={20} color="#64748b" />
+                  <Text style={styles.profileInfoText}>{profileData.email || 'Not provided'}</Text>
+                </View>
+                <View style={styles.profileInfoRow}>
+                  <Ionicons name="call-outline" size={20} color="#64748b" />
+                  <Text style={styles.profileInfoText}>{profileData.phoneNumber || 'Not provided'}</Text>
+                </View>
+                {profileData.companyName && (
+                  <View style={styles.profileInfoRow}>
+                    <Ionicons name="business-outline" size={20} color="#64748b" />
+                    <Text style={styles.profileInfoText}>{profileData.companyName}</Text>
+                  </View>
+                )}
+                <View style={styles.profileInfoRow}>
+                  <Ionicons name="location-outline" size={20} color="#64748b" />
+                  <Text style={styles.profileInfoText}>
+                    {profileData.address ? `${profileData.address}, ` : ''}{profileData.city || ''}, {profileData.district || ''}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.profileStats}>
+              <View style={styles.profileStatItem}>
+                <Text style={styles.profileStatValue}>{profileData?.totalJobsPosted || 0}</Text>
+                <Text style={styles.profileStatLabel}>Posted Jobs</Text>
+              </View>
+              <View style={styles.profileStatDivider} />
+              <View style={styles.profileStatItem}>
+                <Text style={styles.profileStatValue}>{profileData?.activeJobs || 0}</Text>
+                <Text style={styles.profileStatLabel}>Active Jobs</Text>
+              </View>
+              <View style={styles.profileStatDivider} />
+              <View style={styles.profileStatItem}>
+                <Text style={styles.profileStatValue}>{profileData?.rating?.toFixed(1) || '0.0'}</Text>
+                <Text style={styles.profileStatLabel}>Rating</Text>
+              </View>
+            </View>
+
+            <View style={styles.menuList}>
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleActionWithVerification(() => {
+                  // Edit profile logic - to be implemented
+                  showAlert('info', 'Coming Soon', 'Profile editing feature will be available soon!');
+                })}
+              >
+                <View style={styles.menuItemLeft}>
+                  <Ionicons name="create-outline" size={20} color="#64748b" />
+                  <Text style={styles.menuItemText}>Edit Profile</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleActionWithVerification(() => {
+                  // Payment methods logic
+                  showAlert('info', 'Coming Soon', 'Payment methods feature will be available soon!');
+                })}
+              >
+                <View style={styles.menuItemLeft}>
+                  <Ionicons name="card-outline" size={20} color="#64748b" />
+                  <Text style={styles.menuItemText}>Payment Methods</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleActionWithVerification(() => {
+                  // Settings logic
+                })}
+              >
+                <View style={styles.menuItemLeft}>
+                  <Ionicons name="settings-outline" size={20} color="#64748b" />
+                  <Text style={styles.menuItemText}>Settings</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem}>
+                <View style={styles.menuItemLeft}>
+                  <Ionicons name="help-circle-outline" size={20} color="#64748b" />
+                  <Text style={styles.menuItemText}>Help & Support</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={onLogout}>
+                <View style={styles.menuItemLeft}>
+                  <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+                  <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setSelectedTab('home')}
+        >
+          <Ionicons 
+            name={selectedTab === 'home' ? 'home' : 'home-outline'} 
+            size={24} 
+            color={selectedTab === 'home' ? '#1e293b' : '#94a3b8'} 
+          />
+          <Text style={[styles.navText, selectedTab === 'home' && styles.navTextActive]}>
+            Home
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setSelectedTab('myJobs')}
+        >
+          <Ionicons 
+            name={selectedTab === 'myJobs' ? 'briefcase' : 'briefcase-outline'} 
+            size={24} 
+            color={selectedTab === 'myJobs' ? '#1e293b' : '#94a3b8'} 
+          />
+          <Text style={[styles.navText, selectedTab === 'myJobs' && styles.navTextActive]}>
+            My Jobs
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setSelectedTab('hired')}
+        >
+          <Ionicons 
+            name={selectedTab === 'hired' ? 'people' : 'people-outline'} 
+            size={24} 
+            color={selectedTab === 'hired' ? '#1e293b' : '#94a3b8'} 
+          />
+          <Text style={[styles.navText, selectedTab === 'hired' && styles.navTextActive]}>
+            Hired
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setSelectedTab('messages')}
+        >
+          <View style={styles.navIconContainer}>
+            <Ionicons 
+              name={selectedTab === 'messages' ? 'chatbubbles' : 'chatbubbles-outline'} 
+              size={24} 
+              color={selectedTab === 'messages' ? '#1e293b' : '#94a3b8'} 
+            />
+            <View style={styles.messageBadge}>
+              <Text style={styles.messageBadgeText}>2</Text>
+            </View>
+          </View>
+          <Text style={[styles.navText, selectedTab === 'messages' && styles.navTextActive]}>
+            Messages
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setSelectedTab('profile')}
+        >
+          <Ionicons 
+            name={selectedTab === 'profile' ? 'person' : 'person-outline'} 
+            size={24} 
+            color={selectedTab === 'profile' ? '#1e293b' : '#94a3b8'} 
+          />
+          <Text style={[styles.navText, selectedTab === 'profile' && styles.navTextActive]}>
+            Profile
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Job Posting Modal */}
+      <Modal
+        visible={showJobPostModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowJobPostModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Post a Job</Text>
+              <TouchableOpacity onPress={() => setShowJobPostModal(false)}>
+                <Ionicons name="close" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalSubtitle}>Post a job to find skilled workers for your needs.</Text>
+
+              {/* Mark as Urgent Toggle */}
+              <TouchableOpacity 
+                style={styles.urgentToggle}
+                onPress={() => setJobForm({...jobForm, markAsUrgent: !jobForm.markAsUrgent})}
+              >
+                <View style={styles.urgentToggleLeft}>
+                  <Ionicons name="alert-circle-outline" size={24} color="#ef4444" />
+                  <View style={styles.urgentToggleTextContainer}>
+                    <Text style={styles.urgentToggleTitle}>Mark as Urgent</Text>
+                    <Text style={styles.urgentToggleSubtitle}>Get faster responses from workers</Text>
+                  </View>
+                </View>
+                <View style={[styles.toggleSwitch, jobForm.markAsUrgent && styles.toggleSwitchActive]}>
+                  <View style={[styles.toggleKnob, jobForm.markAsUrgent && styles.toggleKnobActive]} />
+                </View>
+              </TouchableOpacity>
+
+              {/* Job Title */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Job Title *</Text>
+                <TextInput
+                  style={styles.inputField}
+                  placeholder="e.g., Emergency Plumbing Repair"
+                  value={jobForm.title}
+                  onChangeText={(text) => setJobForm({...jobForm, title: text})}
                 />
               </View>
 
-              {/* Job Title */}
-              <Text className="text-gray-900 font-bold text-sm mb-2">Job Title *</Text>
-              <TextInput
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 mb-4"
-                placeholder="e.g., Emergency Plumbing Repair"
-                placeholderTextColor="#9CA3AF"
-                value={jobTitle}
-                onChangeText={setJobTitle}
-              />
-
               {/* Description */}
-              <Text className="text-gray-900 font-bold text-sm mb-2">Description *</Text>
-              <TextInput
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 mb-4"
-                placeholder="Describe the job requirements..."
-                placeholderTextColor="#9CA3AF"
-                value={jobDescription}
-                onChangeText={setJobDescription}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Description *</Text>
+                <TextInput
+                  style={[styles.inputField, styles.textAreaField]}
+                  placeholder="Describe the job requirements..."
+                  value={jobForm.description}
+                  onChangeText={(text) => setJobForm({...jobForm, description: text})}
+                  multiline
+                  numberOfLines={4}
+                />
+              </View>
 
               {/* Required Skills */}
-              <Text className="text-gray-900 font-bold text-sm mb-2">Required Skills *</Text>
-              <View className="flex-row flex-wrap gap-2 mb-4">
-                {availableSkills.map((skill) => (
-                  <Pressable
-                    key={skill}
-                    onPress={() => toggleSkill(skill)}
-                    className={`px-4 py-2 rounded-full border ${
-                      selectedSkills.includes(skill)
-                        ? 'bg-[#447788] border-[#447788]'
-                        : 'bg-white border-gray-300'
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm font-medium ${
-                        selectedSkills.includes(skill) ? 'text-white' : 'text-gray-700'
-                      }`}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Required Skills *</Text>
+                <View style={styles.skillsGrid}>
+                  {skillOptions.map((skill) => (
+                    <TouchableOpacity
+                      key={skill}
+                      style={[
+                        styles.skillButton,
+                        jobForm.requiredSkills.includes(skill) && styles.skillButtonActive
+                      ]}
+                      onPress={() => toggleSkill(skill)}
                     >
-                      {skill}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text style={[
+                        styles.skillButtonText,
+                        jobForm.requiredSkills.includes(skill) && styles.skillButtonTextActive
+                      ]}>
+                        {skill}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
 
               {/* Location */}
-              <View className="flex-row gap-3 mb-4">
-                <View className="flex-1">
-                  <Text className="text-gray-900 font-bold text-sm mb-2">📍 Location</Text>
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>
+                  <Ionicons name="location-outline" size={16} color="#64748b" /> Location
+                </Text>
+                <View style={styles.locationRow}>
                   <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900"
+                    style={[styles.inputField, styles.locationInput]}
                     placeholder="Area"
-                    placeholderTextColor="#9CA3AF"
-                    value={location}
-                    onChangeText={setLocation}
+                    value={jobForm.area}
+                    onChangeText={(text) => setJobForm({...jobForm, area: text})}
                   />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-gray-900 font-bold text-sm mb-2">District</Text>
                   <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900"
+                    style={[styles.inputField, styles.locationInput]}
                     placeholder="District"
-                    placeholderTextColor="#9CA3AF"
-                    value={district}
-                    onChangeText={setDistrict}
+                    value={jobForm.district}
+                    onChangeText={(text) => setJobForm({...jobForm, district: text})}
                   />
                 </View>
               </View>
 
               {/* Budget and Payment Type */}
-              <View className="flex-row gap-3 mb-4">
-                <View className="flex-1">
-                  <Text className="text-gray-900 font-bold text-sm mb-2">💵 Budget (Rs.)</Text>
-                  <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900"
-                    placeholder="e.g., 1500"
-                    placeholderTextColor="#9CA3AF"
-                    value={budget}
-                    onChangeText={setBudget}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-gray-900 font-bold text-sm mb-2">Payment Type</Text>
-                  <Pressable
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row justify-between items-center"
-                    onPress={() => {
-                      const types = ['Daily', 'Weekly', 'Monthly'];
-                      const currentIndex = types.indexOf(paymentType);
-                      const nextIndex = (currentIndex + 1) % types.length;
-                      setPaymentType(types[nextIndex]);
-                    }}
-                  >
-                    <Text className="text-gray-900">{paymentType}</Text>
-                    <Ionicons name="chevron-down" size={20} color="#6B7280" />
-                  </Pressable>
+              <View style={[styles.formGroup, { zIndex: 100 }]}>
+                <View style={styles.budgetRow}>
+                  <View style={styles.budgetInputContainer}>
+                    <Text style={styles.label}>
+                      <Ionicons name="cash-outline" size={16} color="#64748b" /> Budget (Rs.)
+                    </Text>
+                    <TextInput
+                      style={styles.inputField}
+                      placeholder="e.g., 1500"
+                      value={jobForm.budget}
+                      onChangeText={(text) => setJobForm({...jobForm, budget: text})}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.paymentTypeContainer}>
+                    <Text style={styles.label}>Payment Type</Text>
+                    <TouchableOpacity 
+                      style={styles.paymentTypeButton}
+                      onPress={() => setShowPaymentTypeModal(!showPaymentTypeModal)}
+                    >
+                      <Text style={styles.paymentTypeText}>{jobForm.paymentType}</Text>
+                      <Ionicons name={showPaymentTypeModal ? "chevron-up" : "chevron-down"} size={20} color="#64748b" />
+                    </TouchableOpacity>
+                    {showPaymentTypeModal && (
+                      <View style={styles.inlineDropdown}>
+                        {['Daily', 'Weekly', 'Monthly', 'Fixed'].map((type, index) => (
+                          <TouchableOpacity
+                            key={type}
+                            style={[
+                              styles.inlineDropdownItem,
+                              index === 3 && styles.inlineDropdownItemLast,
+                            ]}
+                            onPress={() => {
+                              setJobForm({...jobForm, paymentType: type});
+                              setShowPaymentTypeModal(false);
+                            }}
+                          >
+                            <Text style={styles.inlineDropdownText}>{type}</Text>
+                            {jobForm.paymentType === type && (
+                              <Ionicons name="checkmark" size={20} color="#10b981" />
+                            )}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
                 </View>
               </View>
 
               {/* Duration / Timeline */}
-              <Text className="text-gray-900 font-bold text-sm mb-2">⏱️ Duration / Timeline</Text>
-              <TextInput
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 mb-6"
-                placeholder="e.g., 1 week, Start ASAP"
-                placeholderTextColor="#9CA3AF"
-                value={duration}
-                onChangeText={setDuration}
-              />
+              <View style={[styles.formGroup, { zIndex: 1 }]}>
+                <Text style={styles.label}>
+                  <Ionicons name="time-outline" size={16} color="#64748b" /> Duration / Timeline
+                </Text>
+                <View style={styles.durationModeToggle}>
+                  <TouchableOpacity
+                    style={[styles.modeButton, durationMode === 'simple' && styles.modeButtonActive]}
+                    onPress={() => setDurationMode('simple')}
+                  >
+                    <Text style={[styles.modeButtonText, durationMode === 'simple' && styles.modeButtonTextActive]}>
+                      Simple
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modeButton, durationMode === 'detailed' && styles.modeButtonActive]}
+                    onPress={() => setDurationMode('detailed')}
+                  >
+                    <Text style={[styles.modeButtonText, durationMode === 'detailed' && styles.modeButtonTextActive]}>
+                      Detailed
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-              {/* Buttons */}
-              <Pressable
-                className="bg-[#447788] py-4 rounded-xl active:bg-[#447788] mb-3"
-                onPress={handlePostJob}
-              >
-                <Text className="text-white text-center font-bold text-base">Post Job</Text>
-              </Pressable>
+                {durationMode === 'simple' ? (
+                  <TextInput
+                    style={styles.inputField}
+                    placeholder="e.g., 1 week, Start ASAP"
+                    value={jobForm.duration}
+                    onChangeText={(text) => setJobForm({...jobForm, duration: text})}
+                  />
+                ) : (
+                  <View style={styles.detailedDuration}>
+                    {Object.keys(jobForm.detailedDuration).map((day) => (
+                      <View key={day} style={styles.dayRow}>
+                        <TouchableOpacity
+                          style={styles.dayCheckbox}
+                          onPress={() => updateDayDuration(day, 'needed', !jobForm.detailedDuration[day].needed)}
+                        >
+                          <View style={[styles.checkbox, jobForm.detailedDuration[day].needed && styles.checkboxActive]}>
+                            {jobForm.detailedDuration[day].needed && (
+                              <Ionicons name="checkmark" size={16} color="#fff" />
+                            )}
+                          </View>
+                          <Text style={styles.dayLabel}>{day}</Text>
+                        </TouchableOpacity>
+                        {jobForm.detailedDuration[day].needed && (
+                          <View style={styles.timeInputs}>
+                            <TextInput
+                              style={styles.timeInput}
+                              placeholder="From"
+                              value={jobForm.detailedDuration[day].from}
+                              onChangeText={(text) => updateDayDuration(day, 'from', text)}
+                            />
+                            <Text style={styles.timeSeparator}>-</Text>
+                            <TextInput
+                              style={styles.timeInput}
+                              placeholder="To"
+                              value={jobForm.detailedDuration[day].to}
+                              onChangeText={(text) => updateDayDuration(day, 'to', text)}
+                            />
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
 
-              <Pressable
-                className="py-4 rounded-xl active:bg-gray-100 mb-4"
-                onPress={() => setShowPostJobModal(false)}
-              >
-                <Text className="text-gray-600 text-center font-bold text-base">Cancel</Text>
-              </Pressable>
+              <View style={{ height: 20 }} />
             </ScrollView>
-          </Pressable>
-        </Pressable>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={[styles.postJobButton, isPosting && styles.postJobButtonDisabled]}
+                onPress={handlePostJob}
+                disabled={isPosting}
+              >
+                <Text style={styles.postJobButtonText}>
+                  {isPosting ? 'Posting...' : 'Post Job'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
-      {/* Bottom Navigation */}
-      <View className="bg-white border-t border-gray-200 px-6 py-3 shadow-lg" style={{ elevation: 10 }}>
-        <View className="flex-row justify-around items-center">
-          <Pressable 
-            className="items-center py-2"
-            onPress={() => setSelectedTab('home')}
-          >
-            <Ionicons 
-              name={selectedTab === 'home' ? 'home' : 'home-outline'} 
-              size={24} 
-              color={selectedTab === 'home' ? '#447788' : '#9CA3AF'} 
-            />
-            <Text className={`text-xs mt-1 ${selectedTab === 'home' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
-              Home
-            </Text>
-          </Pressable>
-
-          <Pressable 
-            className="items-center py-2"
-            onPress={() => setSelectedTab('myJobs')}
-          >
-            <Ionicons 
-              name={selectedTab === 'myJobs' ? 'briefcase' : 'briefcase-outline'} 
-              size={24} 
-              color={selectedTab === 'myJobs' ? '#447788' : '#9CA3AF'} 
-            />
-            <Text className={`text-xs mt-1 ${selectedTab === 'myJobs' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
-              My Jobs
-            </Text>
-          </Pressable>
-
-          <Pressable 
-            className="items-center py-2 relative"
-            onPress={() => setSelectedTab('messages')}
-          >
-            <View>
-              <Ionicons 
-                name={selectedTab === 'messages' ? 'chatbubbles' : 'chatbubbles-outline'} 
-                size={24} 
-                color={selectedTab === 'messages' ? '#447788' : '#9CA3AF'} 
-              />
-              {unreadMessages > 0 && (
-                <View className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full items-center justify-center">
-                  <Text className="text-white text-[10px] font-bold">{unreadMessages}</Text>
-                </View>
-              )}
+      {/* Custom Alert Modal */}
+      {customAlert.visible && customAlert.type && (
+        <Modal
+          visible={customAlert.visible}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={hideAlert}
+        >
+          <View style={styles.alertOverlay}>
+            <View style={styles.alertContainer}>
+              <View style={[
+                styles.alertIconContainer, 
+                customAlert.type === 'success' ? styles.alertSuccessBg : 
+                customAlert.type === 'warning' ? styles.alertWarningBg : 
+                styles.alertErrorBg
+              ]}>
+                <Ionicons 
+                  name={
+                    customAlert.type === 'success' ? 'checkmark-circle' : 
+                    customAlert.type === 'warning' ? 'alert-circle' : 
+                    'close-circle'
+                  } 
+                  size={48} 
+                  color={
+                    customAlert.type === 'success' ? '#10b981' : 
+                    customAlert.type === 'warning' ? '#f59e0b' : 
+                    '#ef4444'
+                  }
+                />
+              </View>
+              <Text style={styles.alertTitle}>
+                {customAlert.title}{customAlert.type === 'success' ? ' 🎉' : ''}
+              </Text>
+              <Text style={styles.alertMessage}>{customAlert.message}</Text>
+              <TouchableOpacity style={styles.alertButton} onPress={hideAlert}>
+                <Text style={styles.alertButtonText}>Continue</Text>
+              </TouchableOpacity>
             </View>
-            <Text className={`text-xs mt-1 ${selectedTab === 'messages' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
-              Messages
-            </Text>
-          </Pressable>
-
-          <Pressable 
-            className="items-center py-2"
-            onPress={() => setSelectedTab('profile')}
-          >
-            <Ionicons 
-              name={selectedTab === 'profile' ? 'person' : 'person-outline'} 
-              size={24} 
-              color={selectedTab === 'profile' ? '#447788' : '#9CA3AF'} 
-            />
-            <Text className={`text-xs mt-1 ${selectedTab === 'profile' ? 'text-[#447788] font-bold' : 'text-gray-500'}`}>
-              Profile
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </View>
+          </View>
+        </Modal>
+      )}
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  logoContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  logoImage: {
+    width: 32,
+    height: 32,
+  },
+  headerText: {
+    flex: 1,
+  },
+  welcomeText: {
+    fontSize: 12,
+    color: '#cbd5e1',
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  content: {
+    flex: 1,
+  },
+  verificationBanner: {
+    backgroundColor: '#fff3cd',
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ffc107',
+    overflow: 'hidden',
+  },
+  verificationBannerContent: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  verificationBannerText: {
+    flex: 1,
+  },
+  verificationBannerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#856404',
+    marginBottom: 4,
+  },
+  verificationBannerMessage: {
+    fontSize: 14,
+    color: '#856404',
+    lineHeight: 20,
+  },
+  section: {
+    padding: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  workerCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  workerHeader: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  workerAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  workerAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  workerInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  workerName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  workerProfession: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 6,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  experienceText: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  availableBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    height: 28,
+  },
+  availableDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16a34a',
+  },
+  availableText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#16a34a',
+  },
+  workerDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  workerDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  workerDetailText: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  workerRateText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10b981',
+  },
+  workerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  viewProfileButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+  },
+  viewProfileText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  hireButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1e293b',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  hireButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  postJobButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  postJobText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  jobCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  jobHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  jobTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    flex: 1,
+  },
+  statusBadge: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  pendingBadge: {
+    backgroundColor: '#fef3c7',
+    borderColor: '#fde68a',
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#16a34a',
+  },
+  pendingNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fffbeb',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  pendingNoticeText: {
+    fontSize: 13,
+    color: '#f59e0b',
+    fontWeight: '500',
+  },
+  jobDescription: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  workerDescription: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  disabledText: {
+    opacity: 0.5,
+  },
+  jobInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  jobInfoText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  jobFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  budgetContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  budgetText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#10b981',
+  },
+  postedText: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  applicantsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  applicantsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3b82f6',
+  },
+  jobActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  viewApplicantsButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+  },
+  viewApplicantsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  editButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+    backgroundColor: '#fef2f2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hiredCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  hiredHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  hiredAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  hiredInfo: {
+    flex: 1,
+  },
+  hiredName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  hiredProfession: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  workingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  workingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2563eb',
+  },
+  workingText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#2563eb',
+  },
+  hiredJobInfo: {
+    marginBottom: 12,
+  },
+  hiredJobTitle: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  hiredDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  detailRight: {
+    alignItems: 'flex-end',
+  },
+  hiredActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  chatButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1e293b',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  chatButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  viewDetailsButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+  },
+  viewDetailsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  profileHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  avatarContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  profileName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  profileRole: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 8,
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#d1fae5',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  verifiedText: {
+    fontSize: 12,
+    color: '#10b981',
+    fontWeight: '600',
+  },
+  profileInfoCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  profileInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  profileInfoText: {
+    fontSize: 14,
+    color: '#1e293b',
+    flex: 1,
+  },
+  profileStats: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  profileStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  profileStatValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  profileStatLabel: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  profileStatDivider: {
+    width: 1,
+    backgroundColor: '#e2e8f0',
+  },
+  menuList: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  menuItemText: {
+    fontSize: 15,
+    color: '#1e293b',
+    fontWeight: '500',
+  },
+  logoutItem: {
+    borderBottomWidth: 0,
+  },
+  logoutText: {
+    color: '#ef4444',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  navIconContainer: {
+    position: 'relative',
+  },
+  messageBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: '#ef4444',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messageBadgeText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  navText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  navTextActive: {
+    color: '#1e293b',
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 500,
+    maxHeight: '85%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    backgroundColor: '#1e293b',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  modalBody: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    marginBottom: 20,
+  },
+  urgentToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  urgentToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    paddingRight: 16,
+  },
+  urgentToggleTextContainer: {
+    flex: 1,
+  },
+  urgentToggleTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  urgentToggleSubtitle: {
+    fontSize: 12,
+    color: '#64748b',
+    lineHeight: 16,
+  },
+  toggleSwitch: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#cbd5e1',
+    padding: 2,
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  toggleSwitchActive: {
+    backgroundColor: '#10b981',
+  },
+  toggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  toggleKnobActive: {
+    alignSelf: 'flex-end',
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 8,
+  },
+  inputField: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  textAreaField: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    paddingTop: 12,
+  },
+  skillsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  skillButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    minWidth: '47%',
+    alignItems: 'center',
+  },
+  skillButtonActive: {
+    backgroundColor: '#1e293b',
+    borderColor: '#1e293b',
+  },
+  skillButtonText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  skillButtonTextActive: {
+    color: '#fff',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  locationInput: {
+    flex: 1,
+  },
+  budgetRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  budgetInputContainer: {
+    flex: 1,
+  },
+  paymentTypeContainer: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 100,
+  },
+  paymentTypeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  paymentTypeText: {
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  inlineDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 10,
+    zIndex: 10000,
+  },
+  inlineDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  inlineDropdownItemLast: {
+    borderBottomWidth: 0,
+  },
+  inlineDropdownText: {
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  modalFooter: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  postJobButton: {
+    backgroundColor: '#1e293b',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  postJobButtonDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  postJobButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  alertOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  alertContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 40,
+    width: '100%',
+    maxWidth: 380,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  alertIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  alertIconInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10b981',
+    position: 'absolute',
+  },
+  alertIconInnerError: {
+    backgroundColor: '#ef4444',
+  },
+  alertSuccessBg: {
+    backgroundColor: '#d1fae5',
+  },
+  alertErrorBg: {
+    backgroundColor: '#fee2e2',
+  },
+  alertWarningBg: {
+    backgroundColor: '#fef3c7',
+  },
+  alertTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  alertMessage: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  alertButton: {
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 60,
+    paddingVertical: 16,
+    borderRadius: 50,
+    width: '100%',
+    shadowColor: '#5b8fa3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  alertButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  durationModeToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 12,
+  },
+  modeButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  modeButtonActive: {
+    backgroundColor: '#1e293b',
+  },
+  modeButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748b',
+  },
+  modeButtonTextActive: {
+    color: '#fff',
+  },
+  detailedDuration: {
+    gap: 12,
+  },
+  dayRow: {
+    gap: 8,
+  },
+  dayCheckbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxActive: {
+    backgroundColor: '#1e293b',
+    borderColor: '#1e293b',
+  },
+  dayLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1e293b',
+    minWidth: 90,
+  },
+  timeInputs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+    marginLeft: 36,
+  },
+  timeInput: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: '#1e293b',
+  },
+  timeSeparator: {
+    fontSize: 16,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  durationRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  pickerContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  pickerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  pickerOptions: {
+    paddingVertical: 8,
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  pickerOptionText: {
+    fontSize: 16,
+    color: '#1e293b',
+  },
+});

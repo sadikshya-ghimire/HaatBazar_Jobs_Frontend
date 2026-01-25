@@ -162,6 +162,26 @@ const HomePage = ({ onLogin, onSignup }) => {
         
         {/* HERO SECTION */}
         <View style={styles.heroSection}>
+          {/* Top Navigation Bar */}
+          <View style={styles.topNav}>
+            <View style={styles.navButtons}>
+              <TouchableOpacity 
+                style={styles.loginButton} 
+                onPress={onLogin}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.loginButtonText}>Login</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.signupButtonNav} 
+                onPress={onSignup}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.signupButtonNavText}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <View style={styles.heroContent}>
             <View style={styles.heroLeft}>
               <View style={styles.logoBadge}>
@@ -613,7 +633,47 @@ const HomePage = ({ onLogin, onSignup }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   scrollView: { flex: 1 },
-  heroSection: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 60, backgroundColor: '#f8fafc' },
+  heroSection: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 60, backgroundColor: '#f8fafc' },
+  topNav: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingTop: 10,
+  },
+  navButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  loginButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    backgroundColor: 'transparent',
+  },
+  loginButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  signupButtonNav: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#1e293b',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  signupButtonNavText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
   heroContent: { flexDirection: width > 768 ? 'row' : 'column', gap: 40, alignItems: 'center' },
   heroLeft: { flex: 1, maxWidth: width > 768 ? '50%' : '100%' },
   heroRight: { flex: 1, maxWidth: width > 768 ? '50%' : '100%', width: '100%' },

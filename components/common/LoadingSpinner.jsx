@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export const LoadingSpinner = ({ 
   size = 40, 
-  color = '#447788' 
+  color = '#1e293b' 
 }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
 

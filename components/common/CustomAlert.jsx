@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Pressable, Modal, Platform } from 'react-native';
+import { View, Text, Pressable, Modal, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const CustomAlert = ({
   visible,
@@ -23,15 +24,15 @@ export const CustomAlert = ({
   const getIcon = () => {
     const lowerTitle = title.toLowerCase();
     if (lowerTitle.includes('success') || lowerTitle.includes('welcome')) {
-      return { name: 'checkmark-circle', color: '#10b981' };
+      return { name: 'checkmark-circle', color: '#10b981', bgColor: '#d1fae5' };
     }
     if (lowerTitle.includes('error') || lowerTitle.includes('failed') || lowerTitle.includes('incorrect')) {
-      return { name: 'close-circle', color: '#ef4444' };
+      return { name: 'close-circle', color: '#ef4444', bgColor: '#fee2e2' };
     }
-    if (lowerTitle.includes('warning') || lowerTitle.includes('required')) {
-      return { name: 'alert-circle', color: '#f59e0b' };
+    if (lowerTitle.includes('warning') || lowerTitle.includes('required') || lowerTitle.includes('review')) {
+      return { name: 'alert-circle', color: '#f59e0b', bgColor: '#fef3c7' };
     }
-    return { name: 'information-circle', color: '#447788' };
+    return { name: 'information-circle', color: '#3b82f6', bgColor: '#dbeafe' };
   };
 
   const icon = getIcon();
@@ -43,90 +44,50 @@ export const CustomAlert = ({
       animationType="fade"
       onRequestClose={onDismiss}
     >
-      <View
-        className="flex-1 justify-center items-center px-6"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-      >
-        <View
-          className="bg-white rounded-3xl w-full max-w-sm overflow-hidden"
-          style={{
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.25,
-            shadowRadius: 16,
-            elevation: 12,
-          }}
-        >
-          {/* Icon Header */}
-          <View className="items-center pt-8 pb-4">
-            <View
-              className="w-20 h-20 rounded-full items-center justify-center mb-4"
-              style={{ backgroundColor: `${icon.color}15` }}
-            >
-              <Ionicons name={icon.name} size={48} color={icon.color} />
+      <View style={styles.overlay}>
+        <View style={[styles.alertCard, { maxHeight: SCREEN_HEIGHT * 0.8 }]}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* Icon Header */}
+            <View style={styles.iconContainer}>
+              <View style={[styles.iconCircle, { backgroundColor: icon.bgColor }]}>
+                <Ionicons name={icon.name} size={48} color={icon.color} />
+              </View>
+
+              {/* Title */}
+              <Text style={styles.title}>{title}</Text>
             </View>
 
-            {/* Title */}
-            <Text className="text-2xl font-bold text-gray-900 text-center px-6">
-              {title}
-            </Text>
-          </View>
+            {/* Message */}
+            <View style={styles.messageContainer}>
+              <Text style={styles.message}>{message}</Text>
+            </View>
+          </ScrollView>
 
-          {/* Message */}
-          <View className="px-6 pb-6">
-            <Text className="text-gray-600 text-base text-center leading-6">
-              {message}
-            </Text>
-          </View>
-
-          {/* Buttons */}
-          <View className="px-4 pb-4">
-            <View className={`${buttons.length > 1 ? 'flex-row' : 'flex-col'} gap-3`}>
+          {/* Buttons - Fixed at bottom */}
+          <View style={styles.buttonsContainer}>
+            <View style={buttons.length > 1 ? styles.buttonRowMultiple : styles.buttonRowSingle}>
               {buttons.map((button, index) => {
                 const isCancel = button.style === 'cancel';
                 const isDestructive = button.style === 'destructive';
 
-                return isCancel ? (
+                return (
                   <Pressable
                     key={index}
                     onPress={() => handleButtonPress(button)}
-                    className={`py-4 px-6 rounded-2xl ${
-                      buttons.length > 1 ? 'flex-1' : ''
-                    } active:opacity-70`}
-                    style={{
-                      backgroundColor: '#f3f4f6',
-                      borderWidth: 1,
-                      borderColor: '#e5e7eb',
-                    }}
+                    style={({ pressed }) => [
+                      isCancel ? styles.cancelButton : styles.primaryButton,
+                      isDestructive && styles.destructiveButton,
+                      buttons.length > 1 && styles.buttonFlex,
+                      pressed && styles.buttonPressed,
+                    ]}
                   >
-                    <Text className="text-center font-bold text-base text-gray-700">
+                    <Text style={isCancel ? styles.cancelButtonText : styles.primaryButtonText}>
                       {button.text}
                     </Text>
                   </Pressable>
-                ) : (
-                  <LinearGradient
-                    key={index}
-                    colors={isDestructive ? ['#ef4444', '#dc2626'] : ['#447788', '#628BB5']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    className={`py-4 px-6 rounded-2xl ${buttons.length > 1 ? 'flex-1' : ''}`}
-                    style={{
-                      shadowColor: isDestructive ? '#ef4444' : '#447788',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 8,
-                      elevation: 6,
-                    }}
-                  >
-                    <Pressable
-                      onPress={() => handleButtonPress(button)}
-                      className="active:opacity-70"
-                    >
-                      <Text className="text-center font-bold text-base text-white">
-                        {button.text}
-                      </Text>
-                    </Pressable>
-                  </LinearGradient>
                 );
               })}
             </View>
@@ -137,24 +98,127 @@ export const CustomAlert = ({
   );
 };
 
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  alertCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    paddingTop: 32,
+    paddingBottom: 16,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    textAlign: 'center',
+    paddingHorizontal: 24,
+  },
+  messageContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  message: {
+    color: '#64748b',
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  buttonsContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  buttonRowSingle: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  buttonRowMultiple: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  buttonFlex: {
+    flex: 1,
+  },
+  primaryButton: {
+    backgroundColor: '#1e293b',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#1e293b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  destructiveButton: {
+    backgroundColor: '#ef4444',
+    shadowColor: '#ef4444',
+  },
+  cancelButton: {
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  buttonPressed: {
+    opacity: 0.7,
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  cancelButtonText: {
+    color: '#475569',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+});
+
 // Helper function to show alerts (works on both web and mobile)
 export const showAlert = (title, message, buttons, setAlertState) => {
-  if (Platform.OS === 'web') {
-    // For web, we need to use the custom modal
-    if (setAlertState) {
-      setAlertState({
-        visible: true,
-        title,
-        message,
-        buttons: buttons || [{ text: 'OK', style: 'default' }],
-      });
-    } else {
-      // Fallback to browser alert
-      alert(`${title}\n\n${message}`);
-    }
-  } else {
-    // For mobile, use native Alert
-    const { Alert } = require('react-native');
-    Alert.alert(title, message, buttons);
+  if (setAlertState) {
+    setAlertState({
+      visible: true,
+      title,
+      message,
+      buttons: buttons || [{ text: 'OK', style: 'default' }],
+    });
   }
 };
+

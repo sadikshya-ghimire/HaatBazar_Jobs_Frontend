@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Platform, Animated } from 'react-native';
+import { Platform, Animated, View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { auth } from 'components/config/firebase';
 import { storage } from 'components/utils/storage';
+import { LoadingSpinner } from 'components/common/LoadingSpinner';
 import HomePage from 'components/home/HomePage';
 import SignUpPage from 'components/auth/SignUpPage';
 import LoginPage from 'components/auth/LoginPage';
@@ -36,9 +37,55 @@ export default function App() {
   const [signupEmail, setSignupEmail] = useState(''); // Store email for verification page
   const [workerRegistrationData, setWorkerRegistrationData] = useState({});
   const [employerRegistrationData, setEmployerRegistrationData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Animation for page transitions - slide effect
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  // Check authentication state on app load
+  useEffect(() => {
+    const checkAuthState = async () => {
+      try {
+        // Check if user is logged in via Firebase
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+          if (user) {
+            console.log('🔐 User is authenticated:', user.uid);
+            
+            // Get stored user data
+            const storedUserType = await storage.getItem('userType');
+            const storedUserName = await storage.getItem('userName');
+            const storedScreen = await storage.getItem('currentScreen');
+            
+            if (storedUserType) {
+              setUserType(storedUserType);
+              setUserName(storedUserName || 'User');
+              
+              // Restore the screen they were on, or default to dashboard
+              if (storedScreen && storedScreen !== 'home' && storedScreen !== 'login' && storedScreen !== 'signup') {
+                setCurrentScreen(storedScreen);
+              } else {
+                setCurrentScreen('dashboard');
+              }
+            }
+          } else {
+            console.log('🔓 No authenticated user');
+            // Clear stored data
+            await storage.removeItem('userType');
+            await storage.removeItem('userName');
+            await storage.removeItem('currentScreen');
+          }
+          setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error('Error checking auth state:', error);
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthState();
+  }, []);
 
   // Animate on screen change with slide
   useEffect(() => {
@@ -49,6 +96,11 @@ export default function App() {
       tension: 65,
       friction: 8,
     }).start();
+    
+    // Persist current screen (except for auth screens)
+    if (currentScreen !== 'home' && currentScreen !== 'login' && currentScreen !== 'signup') {
+      storage.setItem('currentScreen', currentScreen);
+    }
   }, [currentScreen]);
 
   // Check for email verification on app load (web only)
@@ -211,7 +263,7 @@ export default function App() {
     setCurrentScreen('dashboard');
   };
 
-  const handleLoginSuccess = (userType, profileComplete, displayName) => {
+  const handleLoginSuccess = async (userType, profileComplete, displayName) => {
     console.log('🎯 handleLoginSuccess called');
     console.log('User Type:', userType);
     console.log('Profile Complete:', profileComplete);
@@ -220,14 +272,27 @@ export default function App() {
     setUserType(userType);
     setUserName(displayName || 'User');
     
+    // Store user data for persistence
+    await storage.setItem('userType', userType);
+    await storage.setItem('userName', displayName || 'User');
+    await storage.setItem('currentScreen', 'dashboard');
+    
     // Always go to dashboard on login
     console.log('✅ Going to dashboard');
     setCurrentScreen('dashboard');
   };
 
   const handleLogout = async () => {
-    setUserType(null);
-    setCurrentScreen('home');
+    try {
+      await auth.signOut();
+      await storage.removeItem('userType');
+      await storage.removeItem('userName');
+      await storage.removeItem('currentScreen');
+      setUserType(null);
+      setCurrentScreen('home');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const renderScreen = () => {
@@ -391,9 +456,15 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <Animated.View style={{ flex: 1, transform: [{ translateX: slideAnim }] }}>
-        {renderScreen()}
-      </Animated.View>
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+          <LoadingSpinner size={50} color="#1e293b" />
+        </View>
+      ) : (
+        <Animated.View style={{ flex: 1, transform: [{ translateX: slideAnim }] }}>
+          {renderScreen()}
+        </Animated.View>
+      )}
       <StatusBar style="auto" />
     </SafeAreaProvider>
   );

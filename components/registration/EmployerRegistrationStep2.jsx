@@ -69,10 +69,11 @@ const EmployerRegistrationStep2 = ({ onBack, onContinue, onSkip }) => {
         return;
       }
 
+      // Use the uploaded URLs from the server, not the local blob URIs
       const saveResult = await profileService.saveEmployerProfile(firebaseUid, 2, {
         nidNumber,
-        nidFront,
-        nidBack,
+        nidFront: uploadResult.urls.nidFront,
+        nidBack: uploadResult.urls.nidBack,
       });
 
       if (saveResult.success) {
@@ -80,8 +81,8 @@ const EmployerRegistrationStep2 = ({ onBack, onContinue, onSkip }) => {
         setIsUploading(false);
         onContinue?.({ 
           nidNumber, 
-          nidFront, 
-          nidBack
+          nidFront: uploadResult.urls.nidFront, 
+          nidBack: uploadResult.urls.nidBack
         });
       } else {
         alert('Failed to save NID information. Please try again.');

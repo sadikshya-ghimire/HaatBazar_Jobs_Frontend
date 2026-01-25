@@ -63,8 +63,9 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }) => {
         return;
       }
 
+      // Use the uploaded URL from the server, not the local blob URI
       const saveResult = await profileService.saveEmployerProfile(firebaseUid, 1, {
-        profilePhoto,
+        profilePhoto: uploadResult.url,
       });
 
       if (saveResult.success) {
@@ -72,7 +73,12 @@ const EmployerRegistrationStep1 = ({ onBack, onContinue, onSkip }) => {
         setIsUploading(false);
         onContinue?.(uploadResult.url);
       } else {
-        alert('Failed to save profile. Please try again.');
+        console.error('❌ Save failed:', saveResult.message);
+        if (saveResult.message === 'User not found') {
+          alert('Your account was not properly set up. Please sign up again or contact support.');
+        } else {
+          alert('Failed to save profile. Please try again.');
+        }
         setIsUploading(false);
       }
     } catch (error) {

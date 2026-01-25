@@ -201,7 +201,7 @@ function VerifyCodePage(props) {
                     keyboardType="number-pad"
                     maxLength={1}
                     className="text-2xl font-bold text-center w-full"
-                    style={{ color: digit ? '#447788' : '#ffffff' }}
+                    style={{ color: digit ? '#1e293b' : '#ffffff' }}
                     selectTextOnFocus
                     editable={!isVerifying}
                   />

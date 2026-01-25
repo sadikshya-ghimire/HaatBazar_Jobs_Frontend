@@ -121,7 +121,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }) => {
             <View className="flex-row items-start mb-4">
               <View 
                 className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: '#447788' }}
+                style={{ backgroundColor: '#1e293b' }}
               >
                 <Text className="text-white font-bold">1</Text>
               </View>
@@ -134,7 +134,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }) => {
             <View className="flex-row items-start mb-4">
               <View 
                 className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: '#447788' }}
+                style={{ backgroundColor: '#1e293b' }}
               >
                 <Text className="text-white font-bold">2</Text>
               </View>
@@ -146,7 +146,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }) => {
             <View className="flex-row items-start mb-4">
               <View 
                 className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: '#447788' }}
+                style={{ backgroundColor: '#1e293b' }}
               >
                 <Text className="text-white font-bold">3</Text>
               </View>
@@ -179,7 +179,7 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }) => {
             disabled={isChecking}
             className="py-4 rounded-xl mb-4 active:opacity-90"
             style={{
-              backgroundColor: isChecking ? '#9ca3af' : '#447788',
+              backgroundColor: isChecking ? '#9ca3af' : '#1e293b',
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
@@ -214,18 +214,18 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }) => {
                 style={{
                   backgroundColor: '#ffffff',
                   borderWidth: 2,
-                  borderColor: '#447788',
+                  borderColor: '#1e293b',
                 }}
               >
                 {isResending ? (
                   <View className="flex-row items-center">
-                    <ActivityIndicator color="#447788" size="small" />
-                    <Text className="font-semibold text-sm ml-2" style={{ color: '#447788' }}>
+                    <ActivityIndicator color="#1e293b" size="small" />
+                    <Text className="font-semibold text-sm ml-2" style={{ color: '#1e293b' }}>
                       Sending...
                     </Text>
                   </View>
                 ) : (
-                  <Text className="font-semibold text-sm" style={{ color: '#447788' }}>
+                  <Text className="font-semibold text-sm" style={{ color: '#1e293b' }}>
                     Resend Email
                   </Text>
                 )}
@@ -239,11 +239,11 @@ const EmailVerificationPage = ({ email, userType, onVerified, onBack }) => {
 
           <View 
             className="mt-8 rounded-xl px-4 py-4"
-            style={{ backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fbbf24' }}
+            style={{ backgroundColor: '#fff3cd', borderWidth: 1, borderColor: '#ffc107' }}
           >
             <View className="flex-row items-start">
               <Ionicons name="information-circle" size={20} color="#f59e0b" style={{ marginRight: 8, marginTop: 2 }} />
-              <Text className="flex-1 text-xs" style={{ color: '#92400e' }}>
+              <Text className="flex-1 text-xs" style={{ color: '#856404' }}>
                 The verification link will expire in 24 hours. If you don't see the email, check your spam folder.
               </Text>
             </View>
