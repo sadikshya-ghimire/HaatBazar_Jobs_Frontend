@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { jobOfferService } from '../services/jobOfferService';
 import { profileService } from '../services/profileService';
+import { bookingService } from '../services/bookingService';
 import { API_CONFIG } from '../config/api.config';
 
 export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
@@ -29,6 +30,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
   const [profileData, setProfileData] = useState(null);
   const [availableJobs, setAvailableJobs] = useState([]);
   const [myJobs, setMyJobs] = useState([]);
+  const [bookingRequests, setBookingRequests] = useState([]);
   const [serviceForm, setServiceForm] = useState({
     title: '',
     description: '',
@@ -61,6 +63,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
     fetchProfileData();
     fetchAvailableJobs();
     fetchMyJobs();
+    fetchBookingRequests();
   }, []);
 
   const fetchProfileData = async () => {
@@ -109,6 +112,39 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
       }
     } catch (error) {
       console.error('Error fetching my jobs:', error);
+    }
+  };
+
+  const fetchBookingRequests = async () => {
+    try {
+      const firebaseUid = auth.currentUser?.uid;
+      if (firebaseUid) {
+        const result = await bookingService.getWorkerBookings(firebaseUid);
+        if (result.success && result.data) {
+          setBookingRequests(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching booking requests:', error);
+    }
+  };
+
+  const handleBookingAction = async (bookingId, action) => {
+    try {
+      const status = action === 'accept' ? 'accepted' : 'rejected';
+      const result = await bookingService.updateBookingStatus(bookingId, status);
+      
+      if (result.success) {
+        showAlert('success', action === 'accept' ? 'Booking Accepted!' : 'Booking Rejected', 
+          action === 'accept' ? 'You can now contact the employer and start the work.' : 'The booking request has been declined.');
+        // Refresh booking requests
+        fetchBookingRequests();
+      } else {
+        showAlert('error', 'Error', result.message || 'Failed to update booking status');
+      }
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      showAlert('error', 'Error', 'An error occurred while updating the booking');
     }
   };
 
@@ -424,6 +460,125 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
           </View>
         )}
 
+        {selectedTab === 'bookings' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Booking Requests</Text>
+            
+            {bookingRequests.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar-outline" size={64} color="#cbd5e1" />
+                <Text style={styles.emptyStateTitle}>No Booking Requests</Text>
+                <Text style={styles.emptyStateText}>
+                  Employers' booking requests will appear here. You can accept or reject them.
+                </Text>
+              </View>
+            ) : (
+              bookingRequests.map((booking) => {
+                const getStatusColor = () => {
+                  switch(booking.status) {
+                    case 'pending': return { bg: '#fef3c7', text: '#f59e0b', dot: '#f59e0b' };
+                    case 'accepted': return { bg: '#dcfce7', text: '#16a34a', dot: '#16a34a' };
+                    case 'in-progress': return { bg: '#dbeafe', text: '#2563eb', dot: '#2563eb' };
+                    case 'completed': return { bg: '#d1fae5', text: '#10b981', dot: '#10b981' };
+                    case 'rejected': return { bg: '#fee2e2', text: '#ef4444', dot: '#ef4444' };
+                    default: return { bg: '#f1f5f9', text: '#64748b', dot: '#64748b' };
+                  }
+                };
+                const statusColor = getStatusColor();
+                
+                return (
+                  <View key={booking._id} style={styles.bookingCard}>
+                    <View style={styles.bookingHeader}>
+                      <View style={styles.bookingAvatar}>
+                        {booking.employerProfile?.profilePhoto ? (
+                          <RNImage 
+                            source={{ uri: `${API_CONFIG.BASE_URL}${booking.employerProfile.profilePhoto}` }} 
+                            style={styles.bookingAvatarImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Ionicons name="business" size={28} color="#1e293b" />
+                        )}
+                      </View>
+                      <View style={styles.bookingInfo}>
+                        <Text style={styles.bookingEmployerName}>{booking.employerName}</Text>
+                        <Text style={styles.bookingJobTitle}>{booking.jobTitle}</Text>
+                      </View>
+                      <View style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}>
+                        <View style={[styles.statusDot, { backgroundColor: statusColor.dot }]} />
+                        <Text style={[styles.statusText, { color: statusColor.text }]}>
+                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <Text style={styles.bookingDescription} numberOfLines={2}>
+                      {booking.jobDescription || 'No description provided'}
+                    </Text>
+                    
+                    <View style={styles.bookingDetails}>
+                      <View style={styles.bookingDetailRow}>
+                        <Ionicons name="cash-outline" size={16} color="#10b981" />
+                        <Text style={styles.bookingDetailText}>NPR {booking.agreedRate}/{booking.rateType}</Text>
+                      </View>
+                      <View style={styles.bookingDetailRow}>
+                        <Ionicons name="card-outline" size={16} color="#3b82f6" />
+                        <Text style={styles.bookingDetailText}>{booking.paymentMethod === 'cash' ? 'Cash' : 'eSewa'}</Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.bookingDetails}>
+                      <View style={styles.bookingDetailRow}>
+                        <Ionicons name="calendar-outline" size={16} color="#64748b" />
+                        <Text style={styles.bookingDetailText}>{new Date(booking.startDate).toLocaleDateString()}</Text>
+                      </View>
+                      <View style={styles.bookingDetailRow}>
+                        <Ionicons name="location-outline" size={16} color="#64748b" />
+                        <Text style={styles.bookingDetailText}>{booking.location?.area}, {booking.location?.district}</Text>
+                      </View>
+                    </View>
+                    
+                    {booking.status === 'pending' && (
+                      <View style={styles.bookingActions}>
+                        <TouchableOpacity 
+                          style={styles.rejectButton}
+                          onPress={() => handleBookingAction(booking._id, 'reject')}
+                        >
+                          <Ionicons name="close-circle-outline" size={18} color="#ef4444" />
+                          <Text style={styles.rejectButtonText}>Reject</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={styles.acceptButton}
+                          onPress={() => handleBookingAction(booking._id, 'accept')}
+                        >
+                          <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+                          <Text style={styles.acceptButtonText}>Accept</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    
+                    {booking.status !== 'pending' && (
+                      <View style={styles.bookingStatusInfo}>
+                        <Ionicons 
+                          name={booking.status === 'accepted' || booking.status === 'in-progress' || booking.status === 'completed' ? 'checkmark-circle' : 'close-circle'} 
+                          size={16} 
+                          color={statusColor.text} 
+                        />
+                        <Text style={[styles.bookingStatusText, { color: statusColor.text }]}>
+                          {booking.status === 'accepted' ? 'You accepted this booking' :
+                           booking.status === 'rejected' ? 'You rejected this booking' :
+                           booking.status === 'in-progress' ? 'Work in progress' :
+                           booking.status === 'completed' ? 'Work completed' : ''}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })
+            )}
+          </View>
+        )}
+
         {selectedTab === 'profile' && (
           <View style={styles.section}>
             <View style={styles.profileHeader}>
@@ -577,6 +732,29 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
           />
           <Text style={[styles.navText, selectedTab === 'myJobs' && styles.navTextActive]}>
             My Jobs
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setSelectedTab('bookings')}
+        >
+          <View style={styles.navIconContainer}>
+            <Ionicons 
+              name={selectedTab === 'bookings' ? 'calendar' : 'calendar-outline'} 
+              size={24} 
+              color={selectedTab === 'bookings' ? '#1e293b' : '#94a3b8'} 
+            />
+            {bookingRequests.filter(b => b.status === 'pending').length > 0 && (
+              <View style={styles.messageBadge}>
+                <Text style={styles.messageBadgeText}>
+                  {bookingRequests.filter(b => b.status === 'pending').length}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={[styles.navText, selectedTab === 'bookings' && styles.navTextActive]}>
+            Bookings
           </Text>
         </TouchableOpacity>
 
@@ -1798,5 +1976,144 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',
+  },
+  // Booking Card Styles
+  bookingCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  bookingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  bookingAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  bookingAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bookingInfo: {
+    flex: 1,
+  },
+  bookingEmployerName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  bookingJobTitle: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  bookingDescription: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  bookingDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  bookingDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  bookingDetailText: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  bookingActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  },
+  acceptButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1e293b',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  acceptButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  rejectButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+  },
+  rejectButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ef4444',
+  },
+  bookingStatusInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  bookingStatusText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#475569',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

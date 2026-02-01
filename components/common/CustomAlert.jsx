@@ -1,8 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, Modal, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, Text, Pressable, Modal, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const CustomAlert = ({
   visible,
@@ -20,22 +18,25 @@ export const CustomAlert = ({
     }
   };
 
-  // Determine icon based on title
+  // Determine icon based on title - remove emoji from title
   const getIcon = () => {
     const lowerTitle = title.toLowerCase();
     if (lowerTitle.includes('success') || lowerTitle.includes('welcome')) {
-      return { name: 'checkmark-circle', color: '#10b981', bgColor: '#d1fae5' };
+      return { name: 'checkmark-circle', color: '#10b981' };
     }
     if (lowerTitle.includes('error') || lowerTitle.includes('failed') || lowerTitle.includes('incorrect')) {
-      return { name: 'close-circle', color: '#ef4444', bgColor: '#fee2e2' };
+      return { name: 'close-circle', color: '#ef4444' };
     }
     if (lowerTitle.includes('warning') || lowerTitle.includes('required') || lowerTitle.includes('review')) {
-      return { name: 'alert-circle', color: '#f59e0b', bgColor: '#fef3c7' };
+      return { name: 'alert-circle', color: '#f59e0b' };
     }
-    return { name: 'information-circle', color: '#3b82f6', bgColor: '#dbeafe' };
+    return { name: 'information-circle', color: '#3b82f6' };
   };
 
   const icon = getIcon();
+  
+  // Remove emoji from title
+  const cleanTitle = title.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
 
   return (
     <Modal
@@ -43,75 +44,70 @@ export const CustomAlert = ({
       transparent
       animationType="fade"
       onRequestClose={onDismiss}
+      statusBarTranslucent
     >
-      <View style={styles.overlay}>
-        <View style={[styles.alertCard, { maxHeight: SCREEN_HEIGHT * 0.8 }]}>
-          <ScrollView 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Icon Header */}
-            <View style={styles.iconContainer}>
-              <View style={[styles.iconCircle, { backgroundColor: icon.bgColor }]}>
-                <Ionicons name={icon.name} size={48} color={icon.color} />
-              </View>
+      <ScrollView 
+        contentContainerStyle={styles.overlay}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.alertCard}>
+          {/* Icon */}
+          <Ionicons name={icon.name} size={48} color={icon.color} style={styles.icon} />
 
-              {/* Title */}
-              <Text style={styles.title}>{title}</Text>
-            </View>
+          {/* Title */}
+          <Text style={styles.title}>{cleanTitle}</Text>
 
-            {/* Message */}
-            <View style={styles.messageContainer}>
-              <Text style={styles.message}>{message}</Text>
-            </View>
-          </ScrollView>
+          {/* Message */}
+          <Text style={styles.message}>{message}</Text>
 
-          {/* Buttons - Fixed at bottom */}
-          <View style={styles.buttonsContainer}>
-            <View style={buttons.length > 1 ? styles.buttonRowMultiple : styles.buttonRowSingle}>
-              {buttons.map((button, index) => {
-                const isCancel = button.style === 'cancel';
-                const isDestructive = button.style === 'destructive';
+          {/* Buttons */}
+          <View style={buttons.length > 1 ? styles.buttonRowMultiple : styles.buttonRowSingle}>
+            {buttons.map((button, index) => {
+              const isCancel = button.style === 'cancel';
+              const isDestructive = button.style === 'destructive';
 
-                return (
-                  <Pressable
-                    key={index}
-                    onPress={() => handleButtonPress(button)}
-                    style={({ pressed }) => [
-                      isCancel ? styles.cancelButton : styles.primaryButton,
-                      isDestructive && styles.destructiveButton,
-                      buttons.length > 1 && styles.buttonFlex,
-                      pressed && styles.buttonPressed,
-                    ]}
-                  >
-                    <Text style={isCancel ? styles.cancelButtonText : styles.primaryButtonText}>
-                      {button.text}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+              return (
+                <Pressable
+                  key={index}
+                  onPress={() => handleButtonPress(button)}
+                  style={({ pressed }) => [
+                    isCancel ? styles.cancelButton : styles.primaryButton,
+                    isDestructive && styles.destructiveButton,
+                    buttons.length > 1 && styles.buttonFlex,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <Text style={isCancel ? styles.cancelButtonText : styles.primaryButtonText}>
+                    {button.text}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
-      </View>
+      </ScrollView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+    minHeight: '100%',
   },
   alertCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 40,
     width: '100%',
-    maxWidth: 400,
-    overflow: 'hidden',
+    maxWidth: 380,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -120,49 +116,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  iconContainer: {
-    alignItems: 'center',
-    paddingTop: 32,
-    paddingBottom: 16,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
+  icon: {
+    marginBottom: 24,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#1e293b',
     textAlign: 'center',
-    paddingHorizontal: 24,
-  },
-  messageContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    marginBottom: 12,
   },
   message: {
+    fontSize: 16,
     color: '#64748b',
-    fontSize: 15,
     textAlign: 'center',
-    lineHeight: 22,
-  },
-  buttonsContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    lineHeight: 24,
+    marginBottom: 32,
   },
   buttonRowSingle: {
-    flexDirection: 'column',
-    gap: 12,
+    width: '100%',
   },
   buttonRowMultiple: {
     flexDirection: 'row',
+    width: '100%',
     gap: 12,
   },
   buttonFlex: {
@@ -170,25 +146,24 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: '#1e293b',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingHorizontal: 60,
+    paddingVertical: 16,
+    borderRadius: 50,
     alignItems: 'center',
-    shadowColor: '#1e293b',
+    shadowColor: '#5b8fa3',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   destructiveButton: {
     backgroundColor: '#ef4444',
-    shadowColor: '#ef4444',
   },
   cancelButton: {
     backgroundColor: '#f1f5f9',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 50,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#cbd5e1',
@@ -198,15 +173,13 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    textAlign: 'center',
   },
   cancelButtonText: {
     color: '#475569',
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
   },
 });
 

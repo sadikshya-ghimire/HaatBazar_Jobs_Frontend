@@ -15,7 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { jobOfferService } from '../services/jobOfferService';
 import { profileService } from '../services/profileService';
+import { bookingService } from '../services/bookingService';
 import { API_CONFIG } from '../config/api.config';
+import WorkerDetailsPage from '../employer/WorkerDetailsPage';
+import ContactWorkerPage from '../employer/ContactWorkerPage';
+import BookingFormPage from '../employer/BookingFormPage';
 
 export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [selectedTab, setSelectedTab] = useState('home');
@@ -29,6 +33,12 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [profileData, setProfileData] = useState(null);
   const [availableWorkers, setAvailableWorkers] = useState([]);
   const [postedJobs, setPostedJobs] = useState([]);
+  const [hiredWorkers, setHiredWorkers] = useState([]);
+  const [selectedWorker, setSelectedWorker] = useState(null);
+  const [selectedHiredWorker, setSelectedHiredWorker] = useState(null);
+  const [showWorkerDetails, setShowWorkerDetails] = useState(false);
+  const [showContactWorker, setShowContactWorker] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
@@ -62,7 +72,15 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     fetchProfileData();
     fetchAvailableWorkers();
     fetchPostedJobs();
+    fetchHiredWorkers();
   }, []);
+
+  // Refresh available workers when switching to home tab
+  useEffect(() => {
+    if (selectedTab === 'home') {
+      fetchAvailableWorkers();
+    }
+  }, [selectedTab]);
 
   const fetchProfileData = async () => {
     const firebaseUid = auth.currentUser?.uid;
@@ -92,7 +110,9 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     try {
       const result = await jobOfferService.getAllActiveWorkerJobOffers();
       if (result.success && result.data) {
-        setAvailableWorkers(result.data);
+        // Filter only active job offers
+        const activeWorkers = result.data.filter(worker => worker.isActive !== false);
+        setAvailableWorkers(activeWorkers);
       }
     } catch (error) {
       console.error('Error fetching available workers:', error);
@@ -113,6 +133,21 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     }
   };
 
+  const fetchHiredWorkers = async () => {
+    try {
+      const firebaseUid = auth.currentUser?.uid;
+      if (firebaseUid) {
+        // Fetch all bookings (pending, accepted, in-progress, completed)
+        const result = await bookingService.getEmployerBookings(firebaseUid);
+        if (result.success && result.data) {
+          setHiredWorkers(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching hired workers:', error);
+    }
+  };
+
   const showAlert = (type, title, message) => {
     setCustomAlert({ visible: true, type, title, message });
   };
@@ -128,6 +163,62 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     }
     action();
     return true;
+  };
+
+  const handleDirectHire = (worker) => {
+    setSelectedWorker(worker);
+    setShowBookingForm(true);
+  };
+
+  const handleBookingSubmit = async (bookingData) => {
+    try {
+      const firebaseUid = auth.currentUser?.uid;
+      if (!firebaseUid || !selectedWorker) return;
+
+      const bookingPayload = {
+        workerFirebaseUid: selectedWorker.firebaseUid,
+        workerJobOfferId: selectedWorker._id,
+        jobTitle: bookingData.jobTitle,
+        jobDescription: bookingData.jobDescription,
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate,
+        workDuration: bookingData.workDuration,
+        agreedRate: bookingData.agreedRate,
+        rateType: bookingData.rateType,
+        totalAmount: bookingData.totalAmount,
+        location: {
+          area: bookingData.area,
+          district: bookingData.district,
+        },
+        notes: bookingData.notes,
+        paymentMethod: bookingData.paymentMethod,
+      };
+
+      const result = await bookingService.createBooking(firebaseUid, bookingPayload);
+
+      if (result.success) {
+        setShowBookingForm(false);
+        
+        // Remove worker from available workers list
+        setAvailableWorkers(availableWorkers.filter(w => w._id !== selectedWorker._id));
+        
+        // Refresh hired workers list
+        await fetchHiredWorkers();
+        
+        showAlert('success', 'Booking Sent!', `Your booking request has been sent to ${selectedWorker.workerName}. They will be notified and can accept or reject the booking.`);
+        setSelectedWorker(null);
+      } else {
+        showAlert('error', 'Error', result.message || 'Failed to create booking. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      showAlert('error', 'Error', 'An error occurred while creating the booking.');
+    }
+  };
+
+  const confirmHire = () => {
+    // This function is no longer used - replaced by booking form
+    hideAlert();
   };
 
   const toggleSkill = (skill) => {
@@ -236,27 +327,6 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
       setIsPosting(false);
     }
   };
-
-  const hiredWorkers = [
-    {
-      id: 1,
-      name: 'Rajesh Thapa',
-      profession: 'Painter',
-      jobTitle: 'House Painting Project',
-      salary: 'NPR 1500/day',
-      status: 'Working',
-      startDate: 'Dec 28, 2024',
-    },
-    {
-      id: 2,
-      name: 'Kopila Sharma',
-      profession: 'Cleaner',
-      jobTitle: 'Office Cleaning',
-      salary: 'NPR 12000/month',
-      status: 'Working',
-      startDate: 'Dec 20, 2024',
-    },
-  ];
 
   const stats = [
     { label: 'Posted Jobs', value: postedJobs.length.toString(), icon: 'briefcase', color: '#3b82f6' },
@@ -393,18 +463,17 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
                     <TouchableOpacity 
                       style={styles.viewProfileButton}
                       onPress={() => handleActionWithVerification(() => {
-                        // View profile logic
+                        setSelectedWorker(worker);
+                        setShowWorkerDetails(true);
                       })}
                     >
                       <Text style={styles.viewProfileText}>View Details</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={styles.hireButton}
-                      onPress={() => handleActionWithVerification(() => {
-                        // Hire logic
-                      })}
+                      onPress={() => handleActionWithVerification(() => handleDirectHire(worker))}
                     >
-                      <Text style={styles.hireButtonText}>Contact</Text>
+                      <Text style={styles.hireButtonText}>Hire</Text>
                       <Ionicons name="arrow-forward" size={16} color="#fff" />
                     </TouchableOpacity>
                   </View>
@@ -499,55 +568,120 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Hired Workers</Text>
             
-            {hiredWorkers.map((worker) => (
-              <View key={worker.id} style={styles.hiredCard}>
-                <View style={styles.hiredHeader}>
-                  <View style={styles.hiredAvatar}>
-                    <Ionicons name="person" size={28} color="#1e293b" />
-                  </View>
-                  <View style={styles.hiredInfo}>
-                    <Text style={styles.hiredName}>{worker.name}</Text>
-                    <Text style={styles.hiredProfession}>{worker.profession}</Text>
-                  </View>
-                  <View style={styles.workingBadge}>
-                    <View style={styles.workingDot} />
-                    <Text style={styles.workingText}>{worker.status}</Text>
-                  </View>
-                </View>
-                <View style={styles.hiredJobInfo}>
-                  <Text style={styles.hiredJobTitle}>{worker.jobTitle}</Text>
-                </View>
-                <View style={styles.hiredDetails}>
-                  <View>
-                    <Text style={styles.detailLabel}>Salary</Text>
-                    <Text style={styles.detailValue}>{worker.salary}</Text>
-                  </View>
-                  <View style={styles.detailRight}>
-                    <Text style={styles.detailLabel}>Start Date</Text>
-                    <Text style={styles.detailValue}>{worker.startDate}</Text>
-                  </View>
-                </View>
-                <View style={styles.hiredActions}>
-                  <TouchableOpacity 
-                    style={styles.chatButton}
-                    onPress={() => handleActionWithVerification(() => {
-                      // Chat logic
-                    })}
-                  >
-                    <Ionicons name="chatbubbles-outline" size={18} color="#fff" />
-                    <Text style={styles.chatButtonText}>Chat</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.viewDetailsButton}
-                    onPress={() => handleActionWithVerification(() => {
-                      // View details logic
-                    })}
-                  >
-                    <Text style={styles.viewDetailsText}>View Details</Text>
-                  </TouchableOpacity>
-                </View>
+            {hiredWorkers.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="people-outline" size={64} color="#cbd5e1" />
+                <Text style={styles.emptyStateTitle}>No Bookings Yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Your booking requests will appear here. Track their status and contact workers once they accept.
+                </Text>
               </View>
-            ))}
+            ) : (
+              hiredWorkers.map((booking) => {
+                const getStatusColor = () => {
+                  switch(booking.status) {
+                    case 'pending': return { bg: '#fef3c7', text: '#f59e0b', dot: '#f59e0b' };
+                    case 'accepted': return { bg: '#dcfce7', text: '#16a34a', dot: '#16a34a' };
+                    case 'in-progress': return { bg: '#dbeafe', text: '#2563eb', dot: '#2563eb' };
+                    case 'completed': return { bg: '#d1fae5', text: '#10b981', dot: '#10b981' };
+                    case 'rejected': return { bg: '#fee2e2', text: '#ef4444', dot: '#ef4444' };
+                    default: return { bg: '#f1f5f9', text: '#64748b', dot: '#64748b' };
+                  }
+                };
+                const statusColor = getStatusColor();
+                
+                return (
+                  <View key={booking._id} style={styles.hiredCard}>
+                    <View style={styles.hiredHeader}>
+                      <View style={styles.hiredAvatar}>
+                        {booking.workerProfile?.profilePhoto ? (
+                          <RNImage 
+                            source={{ uri: `${API_CONFIG.BASE_URL}${booking.workerProfile.profilePhoto}` }} 
+                            style={styles.hiredAvatarImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Ionicons name="person" size={28} color="#1e293b" />
+                        )}
+                      </View>
+                      <View style={styles.hiredInfo}>
+                        <Text style={styles.hiredName}>{booking.workerName}</Text>
+                        <Text style={styles.hiredProfession}>{booking.jobTitle}</Text>
+                      </View>
+                      <View style={[styles.workingBadge, { backgroundColor: statusColor.bg }]}>
+                        <View style={[styles.workingDot, { backgroundColor: statusColor.dot }]} />
+                        <Text style={[styles.workingText, { color: statusColor.text }]}>
+                          {booking.status === 'accepted' ? 'Accepted' : 
+                           booking.status === 'in-progress' ? 'Working' : 
+                           booking.status === 'completed' ? 'Completed' : 
+                           booking.status === 'rejected' ? 'Rejected' : 'Pending'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.hiredJobInfo}>
+                      <Text style={styles.hiredJobTitle}>{booking.jobDescription || 'No description'}</Text>
+                    </View>
+                    <View style={styles.hiredDetails}>
+                      <View>
+                        <Text style={styles.detailLabel}>Rate</Text>
+                        <Text style={styles.detailValue}>NPR {booking.agreedRate}/{booking.rateType}</Text>
+                      </View>
+                      <View>
+                        <Text style={styles.detailLabel}>Payment</Text>
+                        <Text style={styles.detailValue}>{booking.paymentMethod === 'cash' ? 'Cash' : 'eSewa'}</Text>
+                      </View>
+                      <View style={styles.detailRight}>
+                        <Text style={styles.detailLabel}>Start Date</Text>
+                        <Text style={styles.detailValue}>{new Date(booking.startDate).toLocaleDateString()}</Text>
+                      </View>
+                    </View>
+                    
+                    {booking.status === 'pending' && (
+                      <View style={styles.pendingNotice}>
+                        <Ionicons name="time-outline" size={16} color="#f59e0b" />
+                        <Text style={styles.pendingNoticeText}>Waiting for worker to accept</Text>
+                      </View>
+                    )}
+                    
+                    <View style={styles.hiredActions}>
+                      {booking.status === 'accepted' || booking.status === 'in-progress' || booking.status === 'completed' ? (
+                        <TouchableOpacity 
+                          style={styles.chatButton}
+                          onPress={() => {
+                            const workerObj = {
+                              _id: booking.workerJobOfferId,
+                              firebaseUid: booking.workerFirebaseUid,
+                              workerName: booking.workerName,
+                              workerProfile: booking.workerProfile,
+                              title: booking.jobTitle,
+                            };
+                            setSelectedHiredWorker(workerObj);
+                            setShowContactWorker(true);
+                          }}
+                        >
+                          <Ionicons name="chatbubbles-outline" size={18} color="#fff" />
+                          <Text style={styles.chatButtonText}>Contact</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.disabledButton}>
+                          <Ionicons name="chatbubbles-outline" size={18} color="#94a3b8" />
+                          <Text style={styles.disabledButtonText}>Contact (Pending)</Text>
+                        </View>
+                      )}
+                      <TouchableOpacity 
+                        style={styles.viewDetailsButton}
+                        onPress={() => {
+                          const details = `Job: ${booking.jobTitle}\n\nDescription: ${booking.jobDescription || 'N/A'}\n\nRate: NPR ${booking.agreedRate}/${booking.rateType}\n\nPayment: ${booking.paymentMethod === 'cash' ? 'Cash on Delivery' : 'eSewa'}\n\nStart: ${new Date(booking.startDate).toLocaleDateString()}\n${booking.endDate ? `End: ${new Date(booking.endDate).toLocaleDateString()}` : ''}\n\nDuration: ${booking.workDuration || 'N/A'}\n\nLocation: ${booking.location?.area || ''}, ${booking.location?.district || ''}\n\nStatus: ${booking.status.toUpperCase()}`;
+                          showAlert('info', 'Booking Details', details);
+                        }}
+                      >
+                        <Text style={styles.viewDetailsText}>View Details</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })
+            )}
           </View>
         )}
 
@@ -1014,18 +1148,21 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
                 styles.alertIconContainer, 
                 customAlert.type === 'success' ? styles.alertSuccessBg : 
                 customAlert.type === 'warning' ? styles.alertWarningBg : 
+                customAlert.type === 'info' ? styles.alertInfoBg :
                 styles.alertErrorBg
               ]}>
                 <Ionicons 
                   name={
                     customAlert.type === 'success' ? 'checkmark-circle' : 
                     customAlert.type === 'warning' ? 'alert-circle' : 
+                    customAlert.type === 'info' ? 'information-circle' :
                     'close-circle'
                   } 
                   size={48} 
                   color={
                     customAlert.type === 'success' ? '#10b981' : 
                     customAlert.type === 'warning' ? '#f59e0b' : 
+                    customAlert.type === 'info' ? '#3b82f6' :
                     '#ef4444'
                   }
                 />
@@ -1034,11 +1171,72 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
                 {customAlert.title}{customAlert.type === 'success' ? ' 🎉' : ''}
               </Text>
               <Text style={styles.alertMessage}>{customAlert.message}</Text>
-              <TouchableOpacity style={styles.alertButton} onPress={hideAlert}>
-                <Text style={styles.alertButtonText}>Continue</Text>
-              </TouchableOpacity>
+              
+              {customAlert.showConfirm ? (
+                <View style={styles.alertButtonsRow}>
+                  <TouchableOpacity style={styles.alertCancelButton} onPress={hideAlert}>
+                    <Text style={styles.alertCancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.alertButton} onPress={confirmHire}>
+                    <Text style={styles.alertButtonText}>Hire</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity style={styles.alertButton} onPress={hideAlert}>
+                  <Text style={styles.alertButtonText}>Continue</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
+        </Modal>
+      )}
+
+      {/* Worker Details Page */}
+      {showWorkerDetails && (selectedWorker || selectedHiredWorker) && (
+        <Modal visible={showWorkerDetails} animationType="slide">
+          <WorkerDetailsPage 
+            worker={selectedHiredWorker || selectedWorker}
+            onBack={() => {
+              setShowWorkerDetails(false);
+              setSelectedWorker(null);
+              setSelectedHiredWorker(null);
+            }}
+            onHire={(worker) => {
+              // Close details page and open booking form
+              setShowWorkerDetails(false);
+              setSelectedWorker(worker);
+              setShowBookingForm(true);
+            }}
+          />
+        </Modal>
+      )}
+
+      {/* Contact Worker Page */}
+      {showContactWorker && (selectedWorker || selectedHiredWorker) && (
+        <Modal visible={showContactWorker} animationType="slide">
+          <ContactWorkerPage 
+            worker={selectedHiredWorker || selectedWorker}
+            employerData={profileData}
+            onBack={() => {
+              setShowContactWorker(false);
+              setSelectedWorker(null);
+              setSelectedHiredWorker(null);
+            }}
+          />
+        </Modal>
+      )}
+
+      {/* Booking Form Page */}
+      {showBookingForm && selectedWorker && (
+        <Modal visible={showBookingForm} animationType="slide">
+          <BookingFormPage 
+            worker={selectedWorker}
+            onBack={() => {
+              setShowBookingForm(false);
+              setSelectedWorker(null);
+            }}
+            onSubmit={handleBookingSubmit}
+          />
         </Modal>
       )}
     </SafeAreaView>
@@ -1153,6 +1351,25 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#475569',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -1525,6 +1742,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  hiredAvatarImage: {
+    width: '100%',
+    height: '100%',
   },
   hiredInfo: {
     flex: 1,
@@ -1605,6 +1827,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+  },
+  disabledButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  disabledButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#94a3b8',
   },
   viewDetailsButton: {
     flex: 1,
@@ -2054,18 +2293,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
-  alertIconInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10b981',
-    position: 'absolute',
-  },
-  alertIconInnerError: {
-    backgroundColor: '#ef4444',
-  },
   alertSuccessBg: {
     backgroundColor: '#d1fae5',
   },
@@ -2074,6 +2301,9 @@ const styles = StyleSheet.create({
   },
   alertWarningBg: {
     backgroundColor: '#fef3c7',
+  },
+  alertInfoBg: {
+    backgroundColor: '#dbeafe',
   },
   alertTitle: {
     fontSize: 28,
@@ -2088,6 +2318,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 24,
+  },
+  alertButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
   },
   alertButton: {
     backgroundColor: '#1e293b',
@@ -2105,6 +2340,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#fff',
+    textAlign: 'center',
+  },
+  alertCancelButton: {
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 50,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  alertCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#475569',
     textAlign: 'center',
   },
   durationModeToggle: {
