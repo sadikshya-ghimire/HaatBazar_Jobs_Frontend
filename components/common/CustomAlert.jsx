@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export const CustomAlert = ({
@@ -18,68 +18,82 @@ export const CustomAlert = ({
     }
   };
 
-  // Determine icon based on title - remove emoji from title
-  const getIcon = () => {
+  // Determine alert type based on title
+  const getAlertType = () => {
     const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('success') || lowerTitle.includes('welcome')) {
-      return { name: 'checkmark-circle', color: '#10b981' };
+    if (lowerTitle.includes('success') || lowerTitle.includes('welcome') || lowerTitle.includes('sent')) {
+      return 'success';
     }
     if (lowerTitle.includes('error') || lowerTitle.includes('failed') || lowerTitle.includes('incorrect')) {
-      return { name: 'close-circle', color: '#ef4444' };
+      return 'error';
     }
     if (lowerTitle.includes('warning') || lowerTitle.includes('required') || lowerTitle.includes('review')) {
-      return { name: 'alert-circle', color: '#f59e0b' };
+      return 'warning';
     }
-    return { name: 'information-circle', color: '#3b82f6' };
+    return 'info';
   };
 
-  const icon = getIcon();
-  
-  // Remove emoji from title
-  const cleanTitle = title.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+  const alertType = getAlertType();
 
   return (
     <Modal
       visible={visible}
-      transparent
       animationType="fade"
+      transparent={true}
       onRequestClose={onDismiss}
     >
-      <View style={styles.overlay}>
-        <View style={styles.alertCard}>
-          {/* Icon */}
-          <Ionicons name={icon.name} size={48} color={icon.color} style={styles.icon} />
-
-          {/* Title */}
-          <Text style={styles.title}>{cleanTitle}</Text>
-
-          {/* Message */}
-          <Text style={styles.message}>{message}</Text>
-
-          {/* Buttons */}
-          <View style={buttons.length > 1 ? styles.buttonRowMultiple : styles.buttonRowSingle}>
-            {buttons.map((button, index) => {
-              const isCancel = button.style === 'cancel';
-              const isDestructive = button.style === 'destructive';
-
-              return (
-                <Pressable
-                  key={index}
-                  onPress={() => handleButtonPress(button)}
-                  style={({ pressed }) => [
-                    isCancel ? styles.cancelButton : styles.primaryButton,
-                    isDestructive && styles.destructiveButton,
-                    buttons.length > 1 && styles.buttonFlex,
-                    pressed && styles.buttonPressed,
-                  ]}
-                >
-                  <Text style={isCancel ? styles.cancelButtonText : styles.primaryButtonText}>
-                    {button.text}
-                  </Text>
-                </Pressable>
-              );
-            })}
+      <View style={styles.alertOverlay}>
+        <View style={styles.alertContainer}>
+          <View style={[
+            styles.alertIconContainer, 
+            alertType === 'success' ? styles.alertSuccessBg : 
+            alertType === 'warning' ? styles.alertWarningBg : 
+            alertType === 'info' ? styles.alertInfoBg :
+            styles.alertErrorBg
+          ]}>
+            <Ionicons 
+              name={
+                alertType === 'success' ? 'checkmark-circle' : 
+                alertType === 'warning' ? 'alert-circle' : 
+                alertType === 'info' ? 'information-circle' :
+                'close-circle'
+              } 
+              size={48} 
+              color={
+                alertType === 'success' ? '#10b981' : 
+                alertType === 'warning' ? '#f59e0b' : 
+                alertType === 'info' ? '#3b82f6' :
+                '#ef4444'
+              }
+            />
           </View>
+          <Text style={styles.alertTitle}>
+            {title}{alertType === 'success' ? ' 🎉' : ''}
+          </Text>
+          <Text style={styles.alertMessage}>{message}</Text>
+          
+          {buttons.length > 1 ? (
+            <View style={styles.alertButtonsRow}>
+              {buttons.map((button, index) => {
+                const isCancel = button.style === 'cancel';
+                return (
+                  <TouchableOpacity 
+                    key={index}
+                    style={isCancel ? styles.alertCancelButton : styles.alertButton} 
+                    onPress={() => handleButtonPress(button)}
+                  >
+                    <Text style={isCancel ? styles.alertCancelButtonText : styles.alertButtonText}>
+                      {button.text || 'OK'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.alertButton} onPress={() => handleButtonPress(buttons[0])}>
+              <Text style={styles.alertButtonText}>{buttons[0]?.text || 'Continue'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </Modal>
@@ -87,14 +101,14 @@ export const CustomAlert = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  alertOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  alertCard: {
+  alertContainer: {
     backgroundColor: '#ffffff',
     borderRadius: 24,
     padding: 40,
@@ -109,70 +123,77 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  icon: {
+  alertIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 24,
   },
-  title: {
+  alertSuccessBg: {
+    backgroundColor: '#d1fae5',
+  },
+  alertErrorBg: {
+    backgroundColor: '#fee2e2',
+  },
+  alertWarningBg: {
+    backgroundColor: '#fef3c7',
+  },
+  alertInfoBg: {
+    backgroundColor: '#dbeafe',
+  },
+  alertTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1e293b',
-    textAlign: 'center',
     marginBottom: 12,
+    textAlign: 'center',
   },
-  message: {
+  alertMessage: {
     fontSize: 16,
     color: '#64748b',
     textAlign: 'center',
-    lineHeight: 24,
     marginBottom: 32,
+    lineHeight: 24,
   },
-  buttonRowSingle: {
-    width: '100%',
-  },
-  buttonRowMultiple: {
+  alertButtonsRow: {
     flexDirection: 'row',
-    width: '100%',
     gap: 12,
+    width: '100%',
   },
-  buttonFlex: {
-    flex: 1,
-  },
-  primaryButton: {
+  alertButton: {
     backgroundColor: '#1e293b',
     paddingHorizontal: 60,
     paddingVertical: 16,
     borderRadius: 50,
-    alignItems: 'center',
+    width: '100%',
     shadowColor: '#5b8fa3',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
-  destructiveButton: {
-    backgroundColor: '#ef4444',
+  alertButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
   },
-  cancelButton: {
+  alertCancelButton: {
     backgroundColor: '#f1f5f9',
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 50,
-    alignItems: 'center',
+    flex: 1,
     borderWidth: 1,
     borderColor: '#cbd5e1',
   },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  cancelButtonText: {
-    color: '#475569',
+  alertCancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#475569',
+    textAlign: 'center',
   },
 });
 
@@ -187,4 +208,3 @@ export const showAlert = (title, message, buttons, setAlertState) => {
     });
   }
 };
-

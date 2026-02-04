@@ -10,18 +10,22 @@ import {
   Image as RNImage,
   Modal,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { jobOfferService } from '../services/jobOfferService';
 import { profileService } from '../services/profileService';
 import { bookingService } from '../services/bookingService';
+import { chatService } from '../services/chatService';
 import { API_CONFIG } from '../config/api.config';
+import ChatPage from '../common/ChatPage';
 
 export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
   const [selectedTab, setSelectedTab] = useState('home');
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [showRateTypeModal, setShowRateTypeModal] = useState(false);
   const [availabilityMode, setAvailabilityMode] = useState('simple'); // 'simple' or 'detailed'
   const [customAlert, setCustomAlert] = useState({ visible: false, type: 'success', title: '', message: '' });
@@ -31,6 +35,9 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
   const [availableJobs, setAvailableJobs] = useState([]);
   const [myJobs, setMyJobs] = useState([]);
   const [bookingRequests, setBookingRequests] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [showContactEmployer, setShowContactEmployer] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [serviceForm, setServiceForm] = useState({
     title: '',
     description: '',
@@ -64,6 +71,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
     fetchAvailableJobs();
     fetchMyJobs();
     fetchBookingRequests();
+    fetchChats();
   }, []);
 
   const fetchProfileData = async () => {
@@ -127,6 +135,33 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
     } catch (error) {
       console.error('Error fetching booking requests:', error);
     }
+  };
+
+  const fetchChats = async () => {
+    try {
+      const firebaseUid = auth.currentUser?.uid;
+      if (firebaseUid) {
+        const result = await chatService.getUserChats(firebaseUid);
+        if (result.success && result.data) {
+          setChats(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      checkVerificationStatus(),
+      fetchProfileData(),
+      fetchAvailableJobs(),
+      fetchMyJobs(),
+      fetchBookingRequests(),
+      fetchChats(),
+    ]);
+    setRefreshing(false);
   };
 
   const handleBookingAction = async (bookingId, action) => {
@@ -319,7 +354,18 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#1e293b']}
+            tintColor="#1e293b"
+          />
+        }
+      >
         {/* Verification Status Banner */}
         {profileExists && !isVerified && (
           <View style={styles.verificationBanner}>
@@ -538,6 +584,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
                       </View>
                     </View>
                     
+                    {/* Show Accept/Reject buttons only for pending bookings */}
                     {booking.status === 'pending' && (
                       <View style={styles.bookingActions}>
                         <TouchableOpacity 
@@ -557,24 +604,158 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
                       </View>
                     )}
                     
-                    {booking.status !== 'pending' && (
+                    {/* Show Contact button for accepted bookings */}
+                    {(booking.status === 'accepted' || booking.status === 'in-progress' || booking.status === 'completed') && (
+                      <TouchableOpacity 
+                        style={styles.contactEmployerButton}
+                        onPress={() => {
+                          setSelectedBooking(booking);
+                          setShowContactEmployer(true);
+                        }}
+                      >
+                        <Ionicons name="chatbubbles-outline" size={18} color="#fff" />
+                        <Text style={styles.contactEmployerButtonText}>Contact Employer</Text>
+                      </TouchableOpacity>
+                    )}
+                    
+                    {/* Show status message for non-pending bookings */}
+                    {booking.status !== 'pending' && booking.status !== 'accepted' && booking.status !== 'in-progress' && booking.status !== 'completed' && (
                       <View style={styles.bookingStatusInfo}>
                         <Ionicons 
-                          name={booking.status === 'accepted' || booking.status === 'in-progress' || booking.status === 'completed' ? 'checkmark-circle' : 'close-circle'} 
+                          name="close-circle" 
                           size={16} 
                           color={statusColor.text} 
                         />
                         <Text style={[styles.bookingStatusText, { color: statusColor.text }]}>
-                          {booking.status === 'accepted' ? 'You accepted this booking' :
-                           booking.status === 'rejected' ? 'You rejected this booking' :
-                           booking.status === 'in-progress' ? 'Work in progress' :
-                           booking.status === 'completed' ? 'Work completed' : ''}
+                          {booking.status === 'rejected' ? 'You rejected this booking' : ''}
                         </Text>
                       </View>
                     )}
                   </View>
                 );
               })
+            )}
+          </View>
+        )}
+
+        {selectedTab === 'messages' && (
+          <View style={styles.messagesContainer}>
+            {chats.length === 0 ? (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons name="chatbubbles" size={48} color="#94a3b8" />
+                </View>
+                <Text style={styles.emptyStateTitle}>No Messages</Text>
+                <Text style={styles.emptyStateText}>
+                  When you contact an employer, your conversations will appear here.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.chatList}>
+                {chats.map((chat, index) => {
+                  // Find the other participant (employer)
+                  const otherParticipant = chat.participants.find(
+                    p => p.firebaseUid !== auth.currentUser?.uid
+                  );
+                  
+                  const lastMessage = chat.lastMessage;
+                  const unreadCount = chat.unreadCount?.[auth.currentUser?.uid] || 0;
+                  const isUnread = unreadCount > 0;
+                  
+                  // Format time like iMessage
+                  const formatTime = (timestamp) => {
+                    const date = new Date(timestamp);
+                    const now = new Date();
+                    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays === 0) {
+                      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    } else if (diffDays === 1) {
+                      return 'Yesterday';
+                    } else if (diffDays < 7) {
+                      return date.toLocaleDateString('en-US', { weekday: 'short' });
+                    } else {
+                      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    }
+                  };
+                  
+                  return (
+                    <TouchableOpacity 
+                      key={chat._id} 
+                      style={[
+                        styles.chatRow,
+                        index !== chats.length - 1 && styles.chatRowBorder,
+                        isUnread && styles.chatRowUnread
+                      ]}
+                      onPress={() => {
+                        const booking = bookingRequests.find(
+                          b => b.employerFirebaseUid === otherParticipant.firebaseUid
+                        );
+                        if (booking) {
+                          setSelectedBooking(booking);
+                          setShowContactEmployer(true);
+                        }
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.chatAvatarContainer}>
+                        {otherParticipant?.profilePhoto ? (
+                          <RNImage 
+                            source={{ 
+                              uri: otherParticipant.profilePhoto.startsWith('http') 
+                                ? otherParticipant.profilePhoto 
+                                : `${API_CONFIG.BASE_URL}${otherParticipant.profilePhoto}` 
+                            }} 
+                            style={styles.chatAvatarImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.chatAvatarPlaceholder}>
+                            <Text style={styles.chatAvatarText}>
+                              {otherParticipant?.name?.charAt(0)?.toUpperCase() || 'E'}
+                            </Text>
+                          </View>
+                        )}
+                        {isUnread && <View style={styles.onlineIndicator} />}
+                      </View>
+                      
+                      <View style={styles.chatContentContainer}>
+                        <View style={styles.chatTopRow}>
+                          <Text style={[styles.chatNameText, isUnread && styles.chatNameUnread]} numberOfLines={1}>
+                            {otherParticipant?.name || 'Unknown Employer'}
+                          </Text>
+                          {lastMessage && (
+                            <Text style={[styles.chatTimeText, isUnread && styles.chatTimeUnread]}>
+                              {formatTime(lastMessage.timestamp)}
+                            </Text>
+                          )}
+                        </View>
+                        
+                        <View style={styles.chatBottomRow}>
+                          {lastMessage && (
+                            <Text 
+                              style={[styles.chatMessagePreview, isUnread && styles.chatMessageUnread]} 
+                              numberOfLines={2}
+                            >
+                              {lastMessage.senderId === auth.currentUser?.uid && (
+                                <Text style={styles.youPrefix}>You: </Text>
+                              )}
+                              {lastMessage.text}
+                            </Text>
+                          )}
+                          {isUnread && (
+                            <View style={styles.unreadDot}>
+                              <Text style={styles.unreadDotText}>{unreadCount}</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                      
+                      <Ionicons name="chevron-forward" size={20} color="#c7c7cc" style={styles.chevronIcon} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             )}
           </View>
         )}
@@ -1065,6 +1246,30 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
           </View>
         </Modal>
       )}
+
+      {/* Contact Employer Modal */}
+      {showContactEmployer && selectedBooking && (
+        <Modal
+          visible={showContactEmployer}
+          animationType="slide"
+          onRequestClose={() => setShowContactEmployer(false)}
+        >
+          <ChatPage
+            participant={{
+              firebaseUid: selectedBooking?.employerFirebaseUid,
+              name: selectedBooking?.employerName,
+              profilePhoto: selectedBooking?.employerProfile?.profilePhoto,
+            }}
+            currentUserData={profileData}
+            userType="worker"
+            onBack={() => {
+              setShowContactEmployer(false);
+              setSelectedBooking(null);
+              fetchChats(); // Refresh chats after closing
+            }}
+          />
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -1272,35 +1477,42 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     backgroundColor: '#dcfce7',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
+    paddingVertical: 8,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
   },
   pendingBadge: {
     backgroundColor: '#fef3c7',
-    borderColor: '#fde68a',
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: '#16a34a',
+    textTransform: 'capitalize',
   },
   pendingNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#fffbeb',
-    padding: 12,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 12,
     marginBottom: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#f59e0b',
   },
   pendingNoticeText: {
     fontSize: 13,
-    color: '#f59e0b',
-    fontWeight: '500',
+    color: '#92400e',
+    fontWeight: '600',
+    flex: 1,
   },
   jobDescription: {
     fontSize: 14,
@@ -2022,10 +2234,9 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   bookingDescription: {
     fontSize: 14,
@@ -2084,6 +2295,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ef4444',
   },
+  contactEmployerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1e293b',
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  contactEmployerButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+  },
   bookingStatusInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2100,20 +2326,206 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
     paddingHorizontal: 40,
   },
+  emptyIconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
   emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#475569',
-    marginTop: 16,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1e293b',
     marginBottom: 8,
   },
   emptyStateText: {
-    fontSize: 14,
-    color: '#94a3b8',
+    fontSize: 15,
+    color: '#64748b',
     textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  messagesContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  chatList: {
+    backgroundColor: '#fff',
+  },
+  chatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+  },
+  chatRowBorder: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e5e7eb',
+  },
+  chatRowUnread: {
+    backgroundColor: '#f8fafc',
+  },
+  chatAvatarContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  chatAvatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  chatAvatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f59e0b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatAvatarText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#10b981',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  chatContentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  chatTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  chatNameText: {
+    fontSize: 17,
+    fontWeight: '400',
+    color: '#1e293b',
+    flex: 1,
+    marginRight: 8,
+  },
+  chatNameUnread: {
+    fontWeight: '600',
+  },
+  chatTimeText: {
+    fontSize: 15,
+    color: '#8e8e93',
+  },
+  chatTimeUnread: {
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  chatBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chatMessagePreview: {
+    fontSize: 15,
+    color: '#8e8e93',
+    flex: 1,
+    marginRight: 8,
     lineHeight: 20,
+  },
+  chatMessageUnread: {
+    color: '#1e293b',
+    fontWeight: '500',
+  },
+  youPrefix: {
+    color: '#8e8e93',
+  },
+  unreadDot: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  unreadDotText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  chevronIcon: {
+    marginLeft: 8,
+  },
+  chatCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  chatAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  chatContent: {
+    flex: 1,
+  },
+  chatHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  chatName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  chatTime: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  chatLastMessage: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  unreadBadge: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  unreadText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

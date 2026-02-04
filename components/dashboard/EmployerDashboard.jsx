@@ -10,21 +10,24 @@ import {
   Image as RNImage,
   Modal,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { jobOfferService } from '../services/jobOfferService';
 import { profileService } from '../services/profileService';
 import { bookingService } from '../services/bookingService';
+import { chatService } from '../services/chatService';
 import { API_CONFIG } from '../config/api.config';
 import WorkerDetailsPage from '../employer/WorkerDetailsPage';
-import ContactWorkerPage from '../employer/ContactWorkerPage';
+import ChatPage from '../common/ChatPage';
 import BookingFormPage from '../employer/BookingFormPage';
 
 export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [selectedTab, setSelectedTab] = useState('home');
   const [showJobPostModal, setShowJobPostModal] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [customAlert, setCustomAlert] = useState({ visible: false, type: 'success', title: '', message: '' });
   const [showPaymentTypeModal, setShowPaymentTypeModal] = useState(false);
   const [durationMode, setDurationMode] = useState('simple'); // 'simple' or 'detailed'
@@ -34,6 +37,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [availableWorkers, setAvailableWorkers] = useState([]);
   const [postedJobs, setPostedJobs] = useState([]);
   const [hiredWorkers, setHiredWorkers] = useState([]);
+  const [chats, setChats] = useState([]);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [selectedHiredWorker, setSelectedHiredWorker] = useState(null);
   const [showWorkerDetails, setShowWorkerDetails] = useState(false);
@@ -73,6 +77,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     fetchAvailableWorkers();
     fetchPostedJobs();
     fetchHiredWorkers();
+    fetchChats();
   }, []);
 
   // Refresh available workers when switching to home tab
@@ -146,6 +151,33 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     } catch (error) {
       console.error('Error fetching hired workers:', error);
     }
+  };
+
+  const fetchChats = async () => {
+    try {
+      const firebaseUid = auth.currentUser?.uid;
+      if (firebaseUid) {
+        const result = await chatService.getUserChats(firebaseUid);
+        if (result.success && result.data) {
+          setChats(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      checkVerificationStatus(),
+      fetchProfileData(),
+      fetchAvailableWorkers(),
+      fetchPostedJobs(),
+      fetchHiredWorkers(),
+      fetchChats(),
+    ]);
+    setRefreshing(false);
   };
 
   const showAlert = (type, title, message) => {
@@ -370,7 +402,18 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#1e293b']}
+            tintColor="#1e293b"
+          />
+        }
+      >
         {/* Verification Status Banner */}
         {profileExists && !isVerified && (
           <View style={styles.verificationBanner}>
@@ -485,16 +528,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
 
         {selectedTab === 'myJobs' && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Posted Jobs</Text>
-              <TouchableOpacity 
-                style={styles.postJobButton}
-                onPress={() => handleActionWithVerification(() => setShowJobPostModal(true))}
-              >
-                <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.postJobText}>Post Job</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sectionTitle}>Posted Jobs</Text>
             
             {postedJobs.map((job) => (
               <View key={job._id} style={styles.jobCard}>
@@ -636,18 +670,28 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
                       </View>
                     </View>
                     
-                    {booking.status === 'pending' && (
+                    {booking.status === 'pending' && booking.adminApproval !== true && (
                       <View style={styles.pendingNotice}>
                         <Ionicons name="time-outline" size={16} color="#f59e0b" />
-                        <Text style={styles.pendingNoticeText}>Waiting for worker to accept</Text>
+                        <Text style={styles.pendingNoticeText}>Waiting for admin approval</Text>
+                      </View>
+                    )}
+                    
+                    {booking.status === 'pending' && booking.adminApproval === true && booking.workerApproval !== true && (
+                      <View style={styles.pendingNotice}>
+                        <Ionicons name="time-outline" size={16} color="#f59e0b" />
+                        <Text style={styles.pendingNoticeText}>Waiting for worker approval</Text>
                       </View>
                     )}
                     
                     <View style={styles.hiredActions}>
-                      {booking.status === 'accepted' || booking.status === 'in-progress' || booking.status === 'completed' ? (
-                        <TouchableOpacity 
-                          style={styles.chatButton}
-                          onPress={() => {
+                      <TouchableOpacity 
+                        style={[
+                          styles.chatButton,
+                          (booking.status !== 'accepted' && booking.status !== 'in-progress' && booking.status !== 'completed') && styles.chatButtonDisabled
+                        ]}
+                        onPress={() => {
+                          if (booking.status === 'accepted' || booking.status === 'in-progress' || booking.status === 'completed') {
                             const workerObj = {
                               _id: booking.workerJobOfferId,
                               firebaseUid: booking.workerFirebaseUid,
@@ -657,21 +701,28 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
                             };
                             setSelectedHiredWorker(workerObj);
                             setShowContactWorker(true);
-                          }}
-                        >
-                          <Ionicons name="chatbubbles-outline" size={18} color="#fff" />
-                          <Text style={styles.chatButtonText}>Contact</Text>
-                        </TouchableOpacity>
-                      ) : (
-                        <View style={styles.disabledButton}>
-                          <Ionicons name="chatbubbles-outline" size={18} color="#94a3b8" />
-                          <Text style={styles.disabledButtonText}>Contact (Pending)</Text>
-                        </View>
-                      )}
+                          }
+                        }}
+                        disabled={booking.status !== 'accepted' && booking.status !== 'in-progress' && booking.status !== 'completed'}
+                      >
+                        <Ionicons 
+                          name="chatbubbles-outline" 
+                          size={18} 
+                          color={(booking.status === 'accepted' || booking.status === 'in-progress' || booking.status === 'completed') ? '#fff' : '#94a3b8'} 
+                        />
+                        <Text style={[
+                          styles.chatButtonText,
+                          (booking.status !== 'accepted' && booking.status !== 'in-progress' && booking.status !== 'completed') && styles.chatButtonTextDisabled
+                        ]}>
+                          Contact
+                        </Text>
+                      </TouchableOpacity>
                       <TouchableOpacity 
                         style={styles.viewDetailsButton}
                         onPress={() => {
-                          const details = `Job: ${booking.jobTitle}\n\nDescription: ${booking.jobDescription || 'N/A'}\n\nRate: NPR ${booking.agreedRate}/${booking.rateType}\n\nPayment: ${booking.paymentMethod === 'cash' ? 'Cash on Delivery' : 'eSewa'}\n\nStart: ${new Date(booking.startDate).toLocaleDateString()}\n${booking.endDate ? `End: ${new Date(booking.endDate).toLocaleDateString()}` : ''}\n\nDuration: ${booking.workDuration || 'N/A'}\n\nLocation: ${booking.location?.area || ''}, ${booking.location?.district || ''}\n\nStatus: ${booking.status.toUpperCase()}`;
+                          const approvalStatus = booking.adminApproval ? 'Admin Approved' : 'Pending Admin Approval';
+                          const workerStatus = booking.workerApproval ? 'Worker Accepted' : 'Pending Worker Acceptance';
+                          const details = `Job: ${booking.jobTitle}\n\nDescription: ${booking.jobDescription || 'N/A'}\n\nRate: NPR ${booking.agreedRate}/${booking.rateType}\n\nPayment: ${booking.paymentMethod === 'cash' ? 'Cash on Delivery' : 'eSewa'}\n\nStart: ${new Date(booking.startDate).toLocaleDateString()}\n${booking.endDate ? `End: ${new Date(booking.endDate).toLocaleDateString()}` : ''}\n\nDuration: ${booking.workDuration || 'N/A'}\n\nLocation: ${booking.location?.area || ''}, ${booking.location?.district || ''}\n\nAdmin: ${approvalStatus}\nWorker: ${workerStatus}\n\nStatus: ${booking.status.toUpperCase()}`;
                           showAlert('info', 'Booking Details', details);
                         }}
                       >
@@ -681,6 +732,129 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
                   </View>
                 );
               })
+            )}
+          </View>
+        )}
+
+        {selectedTab === 'messages' && (
+          <View style={styles.messagesContainer}>
+            {chats.length === 0 ? (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons name="chatbubbles" size={48} color="#94a3b8" />
+                </View>
+                <Text style={styles.emptyStateTitle}>No Messages</Text>
+                <Text style={styles.emptyStateText}>
+                  When you contact a worker, your conversations will appear here.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.chatList}>
+                {chats.map((chat, index) => {
+                  // Find the other participant (worker)
+                  const otherParticipant = chat.participants.find(
+                    p => p.firebaseUid !== auth.currentUser?.uid
+                  );
+                  
+                  const lastMessage = chat.lastMessage;
+                  const unreadCount = chat.unreadCount?.[auth.currentUser?.uid] || 0;
+                  const isUnread = unreadCount > 0;
+                  
+                  // Format time like iMessage
+                  const formatTime = (timestamp) => {
+                    const date = new Date(timestamp);
+                    const now = new Date();
+                    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays === 0) {
+                      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    } else if (diffDays === 1) {
+                      return 'Yesterday';
+                    } else if (diffDays < 7) {
+                      return date.toLocaleDateString('en-US', { weekday: 'short' });
+                    } else {
+                      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    }
+                  };
+                  
+                  return (
+                    <TouchableOpacity 
+                      key={chat._id} 
+                      style={[
+                        styles.chatRow,
+                        index !== chats.length - 1 && styles.chatRowBorder,
+                        isUnread && styles.chatRowUnread
+                      ]}
+                      onPress={() => {
+                        const workerObj = {
+                          _id: chat._id,
+                          firebaseUid: otherParticipant.firebaseUid,
+                          workerName: otherParticipant.name,
+                          workerProfile: { profilePhoto: otherParticipant.profilePhoto },
+                        };
+                        setSelectedHiredWorker(workerObj);
+                        setShowContactWorker(true);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.chatAvatarContainer}>
+                        {otherParticipant?.profilePhoto ? (
+                          <RNImage 
+                            source={{ 
+                              uri: otherParticipant.profilePhoto.startsWith('http') 
+                                ? otherParticipant.profilePhoto 
+                                : `${API_CONFIG.BASE_URL}${otherParticipant.profilePhoto}` 
+                            }} 
+                            style={styles.chatAvatarImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.chatAvatarPlaceholder}>
+                            <Text style={styles.chatAvatarText}>
+                              {otherParticipant?.name?.charAt(0)?.toUpperCase() || 'W'}
+                            </Text>
+                          </View>
+                        )}
+                        {isUnread && <View style={styles.onlineIndicator} />}
+                      </View>
+                      
+                      <View style={styles.chatContentContainer}>
+                        <View style={styles.chatTopRow}>
+                          <Text style={[styles.chatNameText, isUnread && styles.chatNameUnread]} numberOfLines={1}>
+                            {otherParticipant?.name || 'Unknown Worker'}
+                          </Text>
+                          {lastMessage && (
+                            <Text style={[styles.chatTimeText, isUnread && styles.chatTimeUnread]}>
+                              {formatTime(lastMessage.timestamp)}
+                            </Text>
+                          )}
+                        </View>
+                        
+                        <View style={styles.chatBottomRow}>
+                          {lastMessage && (
+                            <Text 
+                              style={[styles.chatMessagePreview, isUnread && styles.chatMessageUnread]} 
+                              numberOfLines={2}
+                            >
+                              {lastMessage.senderId === auth.currentUser?.uid && (
+                                <Text style={styles.youPrefix}>You: </Text>
+                              )}
+                              {lastMessage.text}
+                            </Text>
+                          )}
+                          {isUnread && (
+                            <View style={styles.unreadDot}>
+                              <Text style={styles.unreadDotText}>{unreadCount}</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                      
+                      <Ionicons name="chevron-forward" size={20} color="#c7c7cc" style={styles.chevronIcon} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             )}
           </View>
         )}
@@ -1214,13 +1388,19 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
       {/* Contact Worker Page */}
       {showContactWorker && (selectedWorker || selectedHiredWorker) && (
         <Modal visible={showContactWorker} animationType="slide">
-          <ContactWorkerPage 
-            worker={selectedHiredWorker || selectedWorker}
-            employerData={profileData}
+          <ChatPage 
+            participant={{
+              firebaseUid: (selectedHiredWorker || selectedWorker).firebaseUid,
+              name: (selectedHiredWorker || selectedWorker).workerName,
+              profilePhoto: (selectedHiredWorker || selectedWorker).workerProfile?.profilePhoto,
+            }}
+            currentUserData={profileData}
+            userType="employer"
             onBack={() => {
               setShowContactWorker(false);
               setSelectedWorker(null);
               setSelectedHiredWorker(null);
+              fetchChats(); // Refresh chats after closing
             }}
           />
         </Modal>
@@ -1355,21 +1535,207 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
     paddingHorizontal: 40,
   },
+  emptyIconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
   emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#475569',
-    marginTop: 16,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1e293b',
     marginBottom: 8,
   },
   emptyStateText: {
-    fontSize: 14,
-    color: '#94a3b8',
+    fontSize: 15,
+    color: '#64748b',
     textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  messagesContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  chatList: {
+    backgroundColor: '#fff',
+  },
+  chatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+  },
+  chatRowBorder: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e5e7eb',
+  },
+  chatRowUnread: {
+    backgroundColor: '#f8fafc',
+  },
+  chatAvatarContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  chatAvatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  chatAvatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatAvatarText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#10b981',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  chatContentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  chatTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  chatNameText: {
+    fontSize: 17,
+    fontWeight: '400',
+    color: '#1e293b',
+    flex: 1,
+    marginRight: 8,
+  },
+  chatNameUnread: {
+    fontWeight: '600',
+  },
+  chatTimeText: {
+    fontSize: 15,
+    color: '#8e8e93',
+  },
+  chatTimeUnread: {
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  chatBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chatMessagePreview: {
+    fontSize: 15,
+    color: '#8e8e93',
+    flex: 1,
+    marginRight: 8,
     lineHeight: 20,
+  },
+  chatMessageUnread: {
+    color: '#1e293b',
+    fontWeight: '500',
+  },
+  youPrefix: {
+    color: '#8e8e93',
+  },
+  unreadDot: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  unreadDotText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  chevronIcon: {
+    marginLeft: 8,
+  },
+  chatCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  chatAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  chatContent: {
+    flex: 1,
+  },
+  chatHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  chatName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  chatTime: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  chatLastMessage: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  unreadBadge: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  unreadText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -1612,16 +1978,21 @@ const styles = StyleSheet.create({
   pendingNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#fffbeb',
-    padding: 12,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 12,
     marginBottom: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#f59e0b',
   },
   pendingNoticeText: {
     fontSize: 13,
-    color: '#f59e0b',
-    fontWeight: '500',
+    color: '#92400e',
+    fontWeight: '600',
+    flex: 1,
   },
   jobDescription: {
     fontSize: 14,
@@ -1766,20 +2137,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     backgroundColor: '#dbeafe',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
   },
   workingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#2563eb',
   },
   workingText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: '#2563eb',
+    textTransform: 'capitalize',
   },
   hiredJobInfo: {
     marginBottom: 12,
@@ -1823,25 +2196,33 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
+  chatButtonDisabled: {
+    backgroundColor: '#f1f5f9',
+    opacity: 0.6,
+  },
   chatButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+  },
+  chatButtonTextDisabled: {
+    color: '#94a3b8',
   },
   disabledButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#f1f5f9',
+    gap: 6,
+    backgroundColor: '#f8fafc',
     paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#e2e8f0',
   },
   disabledButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#94a3b8',
   },
