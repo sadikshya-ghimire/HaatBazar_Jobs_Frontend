@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, Modal, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export const CustomAlert = ({
@@ -44,13 +44,8 @@ export const CustomAlert = ({
       transparent
       animationType="fade"
       onRequestClose={onDismiss}
-      statusBarTranslucent
     >
-      <ScrollView 
-        contentContainerStyle={styles.overlay}
-        bounces={false}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.overlay}>
         <View style={styles.alertCard}>
           {/* Icon */}
           <Ionicons name={icon.name} size={48} color={icon.color} style={styles.icon} />
@@ -86,20 +81,18 @@ export const CustomAlert = ({
             })}
           </View>
         </View>
-      </ScrollView>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
-    flexGrow: 1,
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 20,
-    paddingVertical: 40,
-    minHeight: '100%',
+    padding: 20,
   },
   alertCard: {
     backgroundColor: '#ffffff',
