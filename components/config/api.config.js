@@ -2,9 +2,12 @@ import { Platform } from 'react-native';
 
 // 🚀 DYNAMIC IP CONFIGURATION
 // This will try to auto-detect your IP, but you can also set it manually
+// Auto-detection works when running through Expo CLI
+// Manual IP is used as fallback for direct device connections
 
 // MANUAL IP (Update this if auto-detection doesn't work)
 const MANUAL_IP = '192.168.1.74'; // ⚠️ Update with your current IP
+// Common IPs: WiFi (192.168.x.x), Hotspot iPhone (172.20.10.x), Hotspot Android (192.168.43.x)
 
 // Try to auto-detect IP from Expo (works if expo-constants is installed)
 const getAutoDetectedIP = () => {
