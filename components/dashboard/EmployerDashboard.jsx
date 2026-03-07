@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -50,6 +50,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const chatsUnsubscribeRef = useRef(null);
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
@@ -85,6 +86,13 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     fetchPostedJobs();
     fetchHiredWorkers();
     fetchChats();
+    
+    // Cleanup Firebase subscriptions
+    return () => {
+      if (chatsUnsubscribeRef.current) {
+        chatsUnsubscribeRef.current();
+      }
+    };
   }, []);
 
   // Refresh available workers when switching to home tab
@@ -164,21 +172,32 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     try {
       const firebaseUid = auth.currentUser?.uid;
       if (firebaseUid) {
-        const result = await chatService.getUserChats(firebaseUid);
-        console.log('💬 Chats fetched:', result);
-        if (result.success && result.data) {
-          console.log('💬 Number of chats:', result.data.length);
-          result.data.forEach((chat, index) => {
-            console.log(`Chat ${index + 1}:`, {
-              id: chat._id,
-              participants: chat.participants.map(p => ({
-                name: p.name,
-                profilePhoto: p.profilePhoto
-              }))
+        // Subscribe to real-time chat updates
+        chatsUnsubscribeRef.current = firebaseChatService.subscribeToUserChats(
+          firebaseUid,
+          async (firebaseChats) => {
+            // Enrich chats with last message
+            const enrichedChats = await Promise.all(
+              firebaseChats.map(async (chat) => {
+                const lastMessageResult = await firebaseChatService.getLastMessage(chat.id);
+                return {
+                  ...chat,
+                  _id: chat.id,
+                  lastMessage: lastMessageResult.data,
+                };
+              })
+            );
+            
+            // Sort by last message timestamp
+            enrichedChats.sort((a, b) => {
+              const timeA = a.lastMessage?.timestamp || new Date(0);
+              const timeB = b.lastMessage?.timestamp || new Date(0);
+              return timeB - timeA;
             });
-          });
-          setChats(result.data);
-        }
+            
+            setChats(enrichedChats);
+          }
+        );
       }
     } catch (error) {
       console.error('Error fetching chats:', error);
