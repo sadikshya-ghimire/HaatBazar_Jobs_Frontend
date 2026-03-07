@@ -13,8 +13,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 export default function HelpSupportPage({ onBack }) {
+  // Track which FAQ is currently expanded (null = all collapsed)
   const [expandedFAQ, setExpandedFAQ] = useState(null);
 
+  // Frequently Asked Questions - covers common user queries
   const faqs = [
     {
       id: 1,
