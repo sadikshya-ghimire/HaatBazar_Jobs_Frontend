@@ -60,8 +60,13 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
   const initializeChat = async () => {
     try {
       const currentUser = auth.currentUser;
-      if (!currentUser || !participant) return;
+      if (!currentUser || !participant) {
+        console.log('❌ Missing currentUser or participant');
+        setIsLoading(false);
+        return;
+      }
 
+      console.log('🔄 Initializing chat...');
       setIsLoading(true);
 
       // Prepare participant data
@@ -77,17 +82,24 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
         profilePhoto: participant.profilePhoto || '',
       };
 
+      console.log('👥 Participants:', { participant1, participant2 });
+
       // Create or get chat using Firebase
       const result = await firebaseChatService.createOrGetChat(participant1, participant2);
       
+      console.log('💬 Chat result:', result);
+      
       if (result.success && result.chatId) {
+        console.log('✅ Chat created/retrieved:', result.chatId);
         setChatId(result.chatId);
         
         // Subscribe to real-time messages
         unsubscribeRef.current = firebaseChatService.subscribeToMessages(
           result.chatId,
           (newMessages) => {
+            console.log('📨 Received messages:', newMessages.length);
             setMessages(newMessages);
+            setIsLoading(false); // Stop loading when messages arrive
             
             // Mark unread messages as read
             const currentUserId = auth.currentUser?.uid;
@@ -130,10 +142,17 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
             setLastSeen(status.lastSeen);
           }
         );
+        
+        // Set loading to false after a timeout if no messages
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
+      } else {
+        console.error('❌ Failed to create/get chat:', result);
+        setIsLoading(false);
       }
     } catch (error) {
-      console.error('Error initializing chat:', error);
-    } finally {
+      console.error('❌ Error initializing chat:', error);
       setIsLoading(false);
     }
   };
