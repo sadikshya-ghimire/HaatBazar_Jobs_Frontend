@@ -25,11 +25,17 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const scrollViewRef = useRef(null);
+  const unsubscribeRef = useRef(null);
 
   useEffect(() => {
     initializeChat();
-    // Real-time subscription will be set up in initializeChat
-    // No more polling needed!
+    
+    // Cleanup subscription on unmount
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
   }, []);
 
   const initializeChat = async () => {
@@ -59,7 +65,7 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
         setChatId(result.chatId);
         
         // Subscribe to real-time messages
-        const unsubscribe = firebaseChatService.subscribeToMessages(
+        unsubscribeRef.current = firebaseChatService.subscribeToMessages(
           result.chatId,
           (newMessages) => {
             setMessages(newMessages);
@@ -69,9 +75,6 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
             }, 100);
           }
         );
-
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
       }
     } catch (error) {
       console.error('Error initializing chat:', error);
