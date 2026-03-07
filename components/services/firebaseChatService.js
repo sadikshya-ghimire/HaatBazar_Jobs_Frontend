@@ -38,4 +38,33 @@ export const firebaseChatService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Subscribe to real-time messages in a chat
+   * @param {string} chatId - The chat ID
+   * @param {function} callback - Callback function to receive messages
+   * @returns {function} Unsubscribe function
+   */
+  subscribeToMessages: (chatId, callback) => {
+    try {
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+      // Real-time listener
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const messages = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp?.toDate(),
+        }));
+        
+        callback(messages);
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error subscribing to messages:', error);
+      return () => {};
+    }
+  },
 };
