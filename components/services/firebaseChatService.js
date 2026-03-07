@@ -126,18 +126,17 @@ export const firebaseChatService = {
   subscribeToUserChats: (firebaseUid, callback) => {
     try {
       const chatsRef = collection(db, 'chats');
-      const q = query(
-        chatsRef,
-        where('participants', 'array-contains-any', [
-          { firebaseUid },
-        ])
-      );
-
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const chats = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+      
+      // Query chats where user is a participant
+      const unsubscribe = onSnapshot(chatsRef, (snapshot) => {
+        const chats = snapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter(chat => 
+            chat.participants?.some(p => p.firebaseUid === firebaseUid)
+          );
         
         callback(chats);
       });
