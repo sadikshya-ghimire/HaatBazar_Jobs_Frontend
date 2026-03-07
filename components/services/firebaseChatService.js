@@ -36,6 +36,11 @@ export const firebaseChatService = {
         return { success: false, error: 'Firestore not initialized' };
       }
       
+      console.log('📊 Firestore instance check:', {
+        type: db.type,
+        app: db.app?.name
+      });
+      
       const messagesRef = collection(db, 'chats', chatId, 'messages');
       console.log('📁 Messages collection ref created');
       
@@ -48,6 +53,7 @@ export const firebaseChatService = {
       };
       
       console.log('📝 Document data:', docData);
+      console.log('🚀 Attempting to add document to Firestore...');
       
       const docRef = await addDoc(messagesRef, docData);
       console.log('✅ Message added to Firestore:', docRef.id);
@@ -55,9 +61,23 @@ export const firebaseChatService = {
       return { success: true };
     } catch (error) {
       console.error('❌ Error sending message:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      return { success: false, error: error.message };
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        name: error.name,
+        stack: error.stack?.substring(0, 200)
+      });
+      
+      // Specific error messages
+      if (error.code === 'permission-denied') {
+        console.error('🚫 PERMISSION DENIED: Firestore security rules are blocking this operation');
+        console.error('💡 Fix: Update Firestore rules in Firebase Console');
+      } else if (error.code === 'unavailable') {
+        console.error('📡 UNAVAILABLE: Cannot connect to Firestore');
+        console.error('💡 Check: Internet connection and Firebase configuration');
+      }
+      
+      return { success: false, error: error.message, code: error.code };
     }
   },
 
@@ -69,23 +89,63 @@ export const firebaseChatService = {
    */
   subscribeToMessages: (chatId, callback) => {
     try {
+      console.log('👂 Subscribing to messages for chat:', chatId);
+      
+      if (!db) {
+        console.error('❌ Firestore db is not initialized');
+        return () => {};
+      }
+      
       const messagesRef = collection(db, 'chats', chatId, 'messages');
       const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
+      console.log('📡 Setting up real-time listener...');
+      
       // Real-time listener
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const messages = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp?.toDate(),
-        }));
-        
-        callback(messages);
-      });
+      const unsubscribe = onSnapshot(
+        q, 
+        (snapshot) => {
+          console.log('📨 Snapshot received:', snapshot.docs.length, 'messages');
+          
+          const messages = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            timestamp: doc.data().timestamp?.toDate(),
+          }));
+          
+          console.log('✅ Messages processed:', messages.length);
+          callback(messages);
+        },
+        (error) => {
+          console.error('❌ Snapshot error:', error);
+          console.error('❌ Error details:', {
+            code: error.code,
+            message: error.message,
+            name: error.name
+          });
+          
+          if (error.code === 'permission-denied') {
+            console.error('🚫 PERMISSION DENIED: Firestore security rules are blocking read access');
+            console.error('💡 Fix: Update Firestore rules in Firebase Console to allow authenticated users');
+          } else if (error.code === 'unavailable') {
+            console.error('📡 UNAVAILABLE: Cannot connect to Firestore');
+            console.error('💡 Check: Internet connection and Firebase configuration');
+          }
+          
+          // Call callback with empty array on error
+          callback([]);
+        }
+      );
 
+      console.log('✅ Listener setup complete');
       return unsubscribe;
     } catch (error) {
-      console.error('Error subscribing to messages:', error);
+      console.error('❌ Error subscribing to messages:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        name: error.name
+      });
       return () => {};
     }
   },
@@ -98,15 +158,32 @@ export const firebaseChatService = {
    */
   createOrGetChat: async (participant1, participant2) => {
     try {
+      console.log('💬 Creating/getting chat for participants:', {
+        p1: participant1.firebaseUid,
+        p2: participant2.firebaseUid
+      });
+      
+      if (!db) {
+        console.error('❌ Firestore db is not initialized');
+        return { success: false, error: 'Firestore not initialized' };
+      }
+      
       // Create a consistent chat ID based on user IDs
       const chatId = [participant1.firebaseUid, participant2.firebaseUid]
         .sort()
         .join('_');
 
+      console.log('🆔 Chat ID:', chatId);
+
       const chatRef = doc(db, 'chats', chatId);
+      console.log('📄 Getting chat document...');
+      
       const chatDoc = await getDoc(chatRef);
+      console.log('📄 Chat exists:', chatDoc.exists());
 
       if (!chatDoc.exists()) {
+        console.log('➕ Creating new chat...');
+        
         // Create new chat
         await setDoc(chatRef, {
           participants: [
@@ -124,12 +201,27 @@ export const firebaseChatService = {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
+        
+        console.log('✅ New chat created');
+      } else {
+        console.log('✅ Using existing chat');
       }
 
       return { success: true, chatId };
     } catch (error) {
-      console.error('Error creating/getting chat:', error);
-      return { success: false, error: error.message };
+      console.error('❌ Error creating/getting chat:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        name: error.name
+      });
+      
+      if (error.code === 'permission-denied') {
+        console.error('🚫 PERMISSION DENIED: Firestore security rules are blocking this operation');
+        console.error('💡 Fix: Update Firestore rules in Firebase Console');
+      }
+      
+      return { success: false, error: error.message, code: error.code };
     }
   },
 

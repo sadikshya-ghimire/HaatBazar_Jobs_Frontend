@@ -11,6 +11,7 @@ import {
   Image as RNImage,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
@@ -125,6 +126,15 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
             const otherUserId = participant.firebaseUid;
             setIsTyping(chatData.typing[otherUserId] || false);
           }
+        }, (error) => {
+          console.error('❌ Error in chat snapshot:', error);
+          if (error.code === 'permission-denied') {
+            Alert.alert(
+              'Permission Denied',
+              'Firestore security rules are blocking access. Please update rules in Firebase Console.',
+              [{ text: 'OK' }]
+            );
+          }
         });
         
         // Store both unsubscribe functions
@@ -150,6 +160,21 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
       } else {
         console.error('❌ Failed to create/get chat:', result);
         setIsLoading(false);
+        
+        // Show alert if permission denied
+        if (result.code === 'permission-denied') {
+          Alert.alert(
+            'Firebase Permission Error',
+            'Cannot access Firestore. Please update security rules:\n\n1. Go to Firebase Console\n2. Firestore Database → Rules\n3. Set: allow read, write: if request.auth != null;',
+            [{ text: 'OK' }]
+          );
+        } else if (result.error) {
+          Alert.alert(
+            'Chat Error',
+            `Failed to initialize chat: ${result.error}`,
+            [{ text: 'OK' }]
+          );
+        }
       }
     } catch (error) {
       console.error('❌ Error initializing chat:', error);
@@ -194,6 +219,21 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
         // No need to manually fetch - real-time subscription handles it!
       } else {
         console.error('❌ Failed to send message:', result.error);
+        
+        // Show alert for specific errors
+        if (result.code === 'permission-denied') {
+          Alert.alert(
+            'Permission Denied',
+            'Cannot send message. Please update Firestore security rules in Firebase Console.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          Alert.alert(
+            'Send Failed',
+            `Could not send message: ${result.error}`,
+            [{ text: 'OK' }]
+          );
+        }
       }
     } catch (error) {
       console.error('❌ Error sending message:', error);

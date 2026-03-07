@@ -60,13 +60,26 @@ try {
   
   // Enable network
   enableNetwork(db).then(() => {
-    console.log('Firestore network enabled');
+    console.log('✅ Firestore network enabled successfully');
   }).catch((error) => {
-    console.error('Error enabling Firestore network:', error);
+    console.error('❌ Error enabling Firestore network:', error);
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      name: error.name
+    });
   });
   
+  console.log('🔥 Firebase initialization complete');
+  console.log('📊 Firestore instance:', db ? 'Created' : 'Failed');
+  
 } catch (error) {
-  console.error('Firebase initialization error:', error);
+  console.error('❌ Firebase initialization error:', error);
+  console.error('Error details:', {
+    code: error.code,
+    message: error.message,
+    name: error.name
+  });
   throw error;
 }
 
