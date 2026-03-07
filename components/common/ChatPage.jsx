@@ -17,6 +17,8 @@ import { auth } from '../config/firebase';
 import { API_CONFIG } from '../config/api.config';
 import { chatService } from '../services/chatService';
 import { firebaseChatService } from '../services/firebaseChatService';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 export default function ChatPage({ participant, onBack, currentUserData, userType }) {
   const [message, setMessage] = useState('');
@@ -77,6 +79,24 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
             }, 100);
           }
         );
+        
+        // Subscribe to chat updates (for typing indicator)
+        const chatRef = doc(db, 'chats', result.chatId);
+        const unsubscribeChat = onSnapshot(chatRef, (docSnapshot) => {
+          const chatData = docSnapshot.data();
+          if (chatData?.typing) {
+            // Check if other participant is typing
+            const otherUserId = participant.firebaseUid;
+            setIsTyping(chatData.typing[otherUserId] || false);
+          }
+        });
+        
+        // Store both unsubscribe functions
+        const originalUnsubscribe = unsubscribeRef.current;
+        unsubscribeRef.current = () => {
+          originalUnsubscribe();
+          unsubscribeChat();
+        };
       }
     } catch (error) {
       console.error('Error initializing chat:', error);
