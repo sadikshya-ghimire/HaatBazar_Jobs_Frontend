@@ -211,6 +211,22 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
     return currentDate !== previousDate;
   };
 
+  const formatLastSeen = (lastSeenDate) => {
+    if (!lastSeenDate) return 'Offline';
+    
+    const now = new Date();
+    const diff = now - lastSeenDate;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return lastSeenDate.toLocaleDateString();
+  };
+
   if (!participant) return null;
 
   const participantName = participant.name || participant.workerName || participant.employerName || 'User';
@@ -245,7 +261,7 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
           <View style={styles.headerInfo}>
             <Text style={styles.headerName} numberOfLines={1}>{participantName}</Text>
             <Text style={styles.headerStatus}>
-              {isTyping ? 'typing...' : 'Active now'}
+              {isTyping ? 'typing...' : isOnline ? 'Online' : lastSeen ? formatLastSeen(lastSeen) : 'Offline'}
             </Text>
           </View>
         </View>
