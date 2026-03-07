@@ -15,7 +15,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { API_CONFIG } from '../config/api.config';
-import { chatService } from '../services/chatService';
 import { firebaseChatService } from '../services/firebaseChatService';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
