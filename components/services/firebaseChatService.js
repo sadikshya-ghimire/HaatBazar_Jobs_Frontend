@@ -15,6 +15,7 @@ import {
   getDoc,
   getDocs,
   where,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -145,6 +146,25 @@ export const firebaseChatService = {
     } catch (error) {
       console.error('Error subscribing to user chats:', error);
       return () => {};
+    }
+  },
+
+  /**
+   * Mark messages as read
+   * @param {string} chatId - The chat ID
+   * @param {string} messageId - The message ID
+   */
+  markMessageAsRead: async (chatId, messageId) => {
+    try {
+      const messageRef = doc(db, 'chats', chatId, 'messages', messageId);
+      await updateDoc(messageRef, {
+        read: true,
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      return { success: false, error: error.message };
     }
   },
 };
