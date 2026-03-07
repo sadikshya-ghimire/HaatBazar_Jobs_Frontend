@@ -45,15 +45,22 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
     
     // Cleanup subscription on unmount
     return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-      }
-      if (onlineStatusUnsubscribeRef.current) {
-        onlineStatusUnsubscribeRef.current();
-      }
-      // Set user offline when leaving chat
-      if (currentUser) {
-        firebaseChatService.updateOnlineStatus(currentUser.uid, false);
+      try {
+        if (unsubscribeRef.current) {
+          unsubscribeRef.current();
+          unsubscribeRef.current = null;
+        }
+        if (onlineStatusUnsubscribeRef.current) {
+          onlineStatusUnsubscribeRef.current();
+          onlineStatusUnsubscribeRef.current = null;
+        }
+        // Set user offline when leaving chat
+        const user = auth.currentUser;
+        if (user) {
+          firebaseChatService.updateOnlineStatus(user.uid, false);
+        }
+      } catch (error) {
+        console.log('Cleanup error (safe to ignore):', error.message);
       }
     };
   }, []);

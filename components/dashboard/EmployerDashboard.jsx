@@ -88,8 +88,13 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
     
     // Cleanup Firebase subscriptions
     return () => {
-      if (chatsUnsubscribeRef.current) {
-        chatsUnsubscribeRef.current();
+      try {
+        if (chatsUnsubscribeRef.current) {
+          chatsUnsubscribeRef.current();
+          chatsUnsubscribeRef.current = null;
+        }
+      } catch (error) {
+        console.log('Cleanup error (safe to ignore):', error.message);
       }
     };
   }, []);
