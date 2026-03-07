@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { API_CONFIG } from '../config/api.config';
 import { chatService } from '../services/chatService';
+import { firebaseChatService } from '../services/firebaseChatService';
 
 export default function ChatPage({ participant, onBack, currentUserData, userType }) {
   const [message, setMessage] = useState('');
