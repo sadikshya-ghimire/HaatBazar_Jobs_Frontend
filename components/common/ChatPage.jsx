@@ -332,6 +332,14 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
                   
                   <View style={[styles.messageTimeRow, isMyMessage && styles.messageTimeRowRight]}>
                     <Text style={styles.messageTime}>{formatMessageTime(msg.timestamp)}</Text>
+                    {isMyMessage && (
+                      <Ionicons 
+                        name={msg.read ? "checkmark-done" : "checkmark"} 
+                        size={16} 
+                        color={msg.read ? "#007AFF" : "#8e8e93"} 
+                        style={{ marginLeft: 4 }}
+                      />
+                    )}
                   </View>
                 </View>
               );
