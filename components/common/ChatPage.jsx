@@ -37,10 +37,23 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
   useEffect(() => {
     initializeChat();
     
+    // Set current user as online
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      firebaseChatService.updateOnlineStatus(currentUser.uid, true);
+    }
+    
     // Cleanup subscription on unmount
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
+      }
+      if (onlineStatusUnsubscribeRef.current) {
+        onlineStatusUnsubscribeRef.current();
+      }
+      // Set user offline when leaving chat
+      if (currentUser) {
+        firebaseChatService.updateOnlineStatus(currentUser.uid, false);
       }
     };
   }, []);
