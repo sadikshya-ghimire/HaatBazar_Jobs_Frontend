@@ -80,22 +80,6 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
     }
   };
 
-  const fetchMessages = async (chatIdParam) => {
-    try {
-      const id = chatIdParam || chatId;
-      if (!id) return;
-
-      const result = await chatService.getChatById(id);
-      if (result.success && result.data) {
-        setMessages(result.data.messages || []);
-        // Mark messages as read
-        await chatService.markAsRead(id, auth.currentUser?.uid);
-      }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
   const handleSendMessage = async () => {
     if (!message.trim() || !chatId || isSending) return;
 
