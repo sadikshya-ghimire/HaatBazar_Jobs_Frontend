@@ -20,6 +20,9 @@ import { bookingService } from '../services/bookingService';
 import { chatService } from '../services/chatService';
 import { API_CONFIG } from '../config/api.config';
 import ChatPage from '../common/ChatPage';
+import SettingsPage from '../profile/SettingsPage';
+import HelpSupportPage from '../profile/HelpSupportPage';
+import EditProfilePage from '../profile/EditProfilePage';
 
 export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
   const [selectedTab, setSelectedTab] = useState('home');
@@ -38,6 +41,9 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
   const [chats, setChats] = useState([]);
   const [showContactEmployer, setShowContactEmployer] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHelpSupport, setShowHelpSupport] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [serviceForm, setServiceForm] = useState({
     title: '',
     description: '',
@@ -328,7 +334,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
         <View style={styles.headerContent}>
           <View style={styles.logoContainer}>
             <RNImage 
-              source={require('../../assets/Icon.png')} 
+              source={require('../../assets/Logo.png')} 
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -521,13 +527,18 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
             ) : (
               bookingRequests.map((booking) => {
                 const getStatusColor = () => {
+                  // If admin approved but worker hasn't approved yet, show as "Pending Approval"
+                  if (booking.adminApproval && !booking.workerApproval && booking.status === 'pending') {
+                    return { bg: '#fef3c7', text: '#f59e0b', dot: '#f59e0b', label: 'Pending Approval' };
+                  }
+                  
                   switch(booking.status) {
-                    case 'pending': return { bg: '#fef3c7', text: '#f59e0b', dot: '#f59e0b' };
-                    case 'accepted': return { bg: '#dcfce7', text: '#16a34a', dot: '#16a34a' };
-                    case 'in-progress': return { bg: '#dbeafe', text: '#2563eb', dot: '#2563eb' };
-                    case 'completed': return { bg: '#d1fae5', text: '#10b981', dot: '#10b981' };
-                    case 'rejected': return { bg: '#fee2e2', text: '#ef4444', dot: '#ef4444' };
-                    default: return { bg: '#f1f5f9', text: '#64748b', dot: '#64748b' };
+                    case 'pending': return { bg: '#fef3c7', text: '#f59e0b', dot: '#f59e0b', label: 'Pending' };
+                    case 'accepted': return { bg: '#dcfce7', text: '#16a34a', dot: '#16a34a', label: 'Accepted' };
+                    case 'in-progress': return { bg: '#dbeafe', text: '#2563eb', dot: '#2563eb', label: 'In Progress' };
+                    case 'completed': return { bg: '#d1fae5', text: '#10b981', dot: '#10b981', label: 'Completed' };
+                    case 'rejected': return { bg: '#fee2e2', text: '#ef4444', dot: '#ef4444', label: 'Rejected' };
+                    default: return { bg: '#f1f5f9', text: '#64748b', dot: '#64748b', label: 'Unknown' };
                   }
                 };
                 const statusColor = getStatusColor();
@@ -553,7 +564,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
                       <View style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}>
                         <View style={[styles.statusDot, { backgroundColor: statusColor.dot }]} />
                         <Text style={[styles.statusText, { color: statusColor.text }]}>
-                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          {statusColor.label}
                         </Text>
                       </View>
                     </View>
@@ -584,8 +595,8 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
                       </View>
                     </View>
                     
-                    {/* Show Accept/Reject buttons only for pending bookings */}
-                    {booking.status === 'pending' && (
+                    {/* Show Accept/Reject buttons only for pending bookings that are admin approved but not worker approved */}
+                    {booking.status === 'pending' && booking.adminApproval && !booking.workerApproval && (
                       <View style={styles.bookingActions}>
                         <TouchableOpacity 
                           style={styles.rejectButton}
@@ -601,6 +612,16 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
                           <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
                           <Text style={styles.acceptButtonText}>Accept</Text>
                         </TouchableOpacity>
+                      </View>
+                    )}
+                    
+                    {/* Show waiting message if admin hasn't approved yet */}
+                    {!booking.adminApproval && (
+                      <View style={styles.bookingStatusInfo}>
+                        <Ionicons name="time-outline" size={16} color="#f59e0b" />
+                        <Text style={[styles.bookingStatusText, { color: '#f59e0b' }]}>
+                          Waiting for admin approval
+                        </Text>
                       </View>
                     )}
                     
@@ -840,8 +861,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleActionWithVerification(() => {
-                  // Edit profile logic - to be implemented
-                  showAlert('info', 'Coming Soon', 'Profile editing feature will be available soon!');
+                  setShowEditProfile(true);
                 })}
               >
                 <View style={styles.menuItemLeft}>
@@ -854,8 +874,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleActionWithVerification(() => {
-                  // Settings logic
-                  showAlert('info', 'Coming Soon', 'Settings feature will be available soon!');
+                  setShowSettings(true);
                 })}
               >
                 <View style={styles.menuItemLeft}>
@@ -865,7 +884,12 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
                 <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleActionWithVerification(() => {
+                  setShowHelpSupport(true);
+                })}
+              >
                 <View style={styles.menuItemLeft}>
                   <Ionicons name="help-circle-outline" size={20} color="#64748b" />
                   <Text style={styles.menuItemText}>Help & Support</Text>
@@ -1267,6 +1291,51 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
               setSelectedBooking(null);
               fetchChats(); // Refresh chats after closing
             }}
+          />
+        </Modal>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Modal
+          visible={showSettings}
+          animationType="slide"
+          onRequestClose={() => setShowSettings(false)}
+        >
+          <SettingsPage 
+            onBack={() => setShowSettings(false)}
+            userType="worker"
+          />
+        </Modal>
+      )}
+
+      {/* Help & Support Modal */}
+      {showHelpSupport && (
+        <Modal
+          visible={showHelpSupport}
+          animationType="slide"
+          onRequestClose={() => setShowHelpSupport(false)}
+        >
+          <HelpSupportPage 
+            onBack={() => setShowHelpSupport(false)}
+          />
+        </Modal>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <Modal
+          visible={showEditProfile}
+          animationType="slide"
+          onRequestClose={() => setShowEditProfile(false)}
+        >
+          <EditProfilePage 
+            onBack={() => {
+              setShowEditProfile(false);
+              fetchProfileData(); // Refresh profile data after editing
+            }}
+            userType="worker"
+            currentProfile={profileData}
           />
         </Modal>
       )}
