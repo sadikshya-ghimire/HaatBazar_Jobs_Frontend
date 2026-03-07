@@ -167,4 +167,25 @@ export const firebaseChatService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Update typing status
+   * @param {string} chatId - The chat ID
+   * @param {string} userId - User ID
+   * @param {boolean} isTyping - Typing status
+   */
+  updateTypingStatus: async (chatId, userId, isTyping) => {
+    try {
+      const chatRef = doc(db, 'chats', chatId);
+      await updateDoc(chatRef, {
+        [`typing.${userId}`]: isTyping,
+        updatedAt: serverTimestamp(),
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating typing status:', error);
+      return { success: false, error: error.message };
+    }
+  },
 };
