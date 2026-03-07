@@ -240,18 +240,32 @@ export const firebaseChatService = {
       const chatsRef = collection(db, 'chats');
       
       // Query chats where user is a participant
-      const unsubscribe = onSnapshot(chatsRef, (snapshot) => {
-        const chats = snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-          .filter(chat => 
-            chat.participants?.some(p => p.firebaseUid === firebaseUid)
-          );
-        
-        callback(chats);
-      });
+      const unsubscribe = onSnapshot(
+        chatsRef, 
+        (snapshot) => {
+          const chats = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            .filter(chat => 
+              chat.participants?.some(p => p.firebaseUid === firebaseUid)
+            );
+          
+          callback(chats);
+        },
+        (error) => {
+          // Silently ignore permission-denied errors after logout
+          if (error.code === 'permission-denied') {
+            console.log('🔓 Chat list listener stopped - user logged out');
+            callback([]);
+            return;
+          }
+          
+          console.error('Error in user chats subscription:', error);
+          callback([]);
+        }
+      );
 
       return unsubscribe;
     } catch (error) {
@@ -330,17 +344,31 @@ export const firebaseChatService = {
     try {
       const userStatusRef = doc(db, 'userStatus', userId);
       
-      const unsubscribe = onSnapshot(userStatusRef, (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          callback({
-            isOnline: data.isOnline || false,
-            lastSeen: data.lastSeen?.toDate(),
-          });
-        } else {
+      const unsubscribe = onSnapshot(
+        userStatusRef, 
+        (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            const data = docSnapshot.data();
+            callback({
+              isOnline: data.isOnline || false,
+              lastSeen: data.lastSeen?.toDate(),
+            });
+          } else {
+            callback({ isOnline: false, lastSeen: null });
+          }
+        },
+        (error) => {
+          // Silently ignore permission-denied errors after logout
+          if (error.code === 'permission-denied') {
+            console.log('🔓 Online status listener stopped - user logged out');
+            callback({ isOnline: false, lastSeen: null });
+            return;
+          }
+          
+          console.error('Error subscribing to online status:', error);
           callback({ isOnline: false, lastSeen: null });
         }
-      });
+      );
 
       return unsubscribe;
     } catch (error) {
