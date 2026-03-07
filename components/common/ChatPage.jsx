@@ -92,6 +92,9 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
       setIsSending(true);
       const currentUser = auth.currentUser;
       
+      // Stop typing indicator before sending
+      await firebaseChatService.updateTypingStatus(chatId, currentUser.uid, false);
+      
       // Send message using Firebase (instant delivery!)
       const result = await firebaseChatService.sendMessage(chatId, {
         text: message.trim(),
@@ -107,6 +110,32 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
       console.error('Error sending message:', error);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleTyping = async (text) => {
+    setMessage(text);
+    
+    if (!chatId) return;
+    
+    const currentUser = auth.currentUser;
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Set typing to true
+    if (text.trim()) {
+      await firebaseChatService.updateTypingStatus(chatId, currentUser.uid, true);
+      
+      // Set timeout to stop typing after 2 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(async () => {
+        await firebaseChatService.updateTypingStatus(chatId, currentUser.uid, false);
+      }, 2000);
+    } else {
+      // If text is empty, stop typing immediately
+      await firebaseChatService.updateTypingStatus(chatId, currentUser.uid, false);
     }
   };
 
