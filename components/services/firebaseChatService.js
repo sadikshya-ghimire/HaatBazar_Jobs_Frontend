@@ -117,6 +117,13 @@ export const firebaseChatService = {
           callback(messages);
         },
         (error) => {
+          // Silently ignore permission-denied errors after logout
+          if (error.code === 'permission-denied') {
+            console.log('🔓 No authenticated user - listener stopped');
+            callback([]);
+            return;
+          }
+          
           console.error('❌ Snapshot error:', error);
           console.error('❌ Error details:', {
             code: error.code,
@@ -124,10 +131,7 @@ export const firebaseChatService = {
             name: error.name
           });
           
-          if (error.code === 'permission-denied') {
-            console.error('🚫 PERMISSION DENIED: Firestore security rules are blocking read access');
-            console.error('💡 Fix: Update Firestore rules in Firebase Console to allow authenticated users');
-          } else if (error.code === 'unavailable') {
+          if (error.code === 'unavailable') {
             console.error('📡 UNAVAILABLE: Cannot connect to Firestore');
             console.error('💡 Check: Internet connection and Firebase configuration');
           }
