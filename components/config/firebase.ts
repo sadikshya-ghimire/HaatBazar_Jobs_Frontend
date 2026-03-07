@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, enableNetwork, initializeFirestore } from 'firebase/firestore';
 
 // Firebase configuration with the latest values from Firebase Console
 const firebaseConfig = {
@@ -41,8 +41,30 @@ try {
   console.log('Auth app name:', auth.app.name);
   console.log('Auth config apiKey:', auth.config.apiKey?.substring(0, 10) + '...');
   
-  db = getFirestore(app);
-  console.log('Firestore initialized');
+  // Initialize Firestore with settings
+  try {
+    db = initializeFirestore(app, {
+      experimentalForceLongPolling: true, // Better for React Native
+      useFetchStreams: false,
+    });
+    console.log('Firestore initialized with custom settings');
+  } catch (error: any) {
+    // If already initialized, just get it
+    if (error.code === 'failed-precondition') {
+      db = getFirestore(app);
+      console.log('Firestore already initialized, using existing instance');
+    } else {
+      throw error;
+    }
+  }
+  
+  // Enable network
+  enableNetwork(db).then(() => {
+    console.log('Firestore network enabled');
+  }).catch((error) => {
+    console.error('Error enabling Firestore network:', error);
+  });
+  
 } catch (error) {
   console.error('Firebase initialization error:', error);
   throw error;
