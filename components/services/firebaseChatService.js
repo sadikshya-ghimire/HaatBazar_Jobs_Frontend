@@ -29,19 +29,34 @@ export const firebaseChatService = {
    */
   sendMessage: async (chatId, messageData) => {
     try {
-      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      console.log('🔥 Firebase sendMessage called:', { chatId, messageData });
       
-      await addDoc(messagesRef, {
+      if (!db) {
+        console.error('❌ Firestore db is not initialized');
+        return { success: false, error: 'Firestore not initialized' };
+      }
+      
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      console.log('📁 Messages collection ref created');
+      
+      const docData = {
         text: messageData.text,
         senderId: messageData.senderId,
         senderName: messageData.senderName,
         timestamp: serverTimestamp(),
         read: false,
-      });
+      };
+      
+      console.log('📝 Document data:', docData);
+      
+      const docRef = await addDoc(messagesRef, docData);
+      console.log('✅ Message added to Firestore:', docRef.id);
 
       return { success: true };
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
       return { success: false, error: error.message };
     }
   },

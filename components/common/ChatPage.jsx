@@ -158,11 +158,23 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim() || !chatId || isSending) return;
+    if (!message.trim() || !chatId || isSending) {
+      console.log('⚠️ Cannot send:', { hasMessage: !!message.trim(), hasChatId: !!chatId, isSending });
+      return;
+    }
 
     try {
+      console.log('📤 Sending message...', { chatId, message: message.trim() });
       setIsSending(true);
       const currentUser = auth.currentUser;
+      
+      if (!currentUser) {
+        console.error('❌ No current user');
+        setIsSending(false);
+        return;
+      }
+      
+      console.log('👤 Current user:', currentUser.uid);
       
       // Stop typing indicator before sending
       await firebaseChatService.updateTypingStatus(chatId, currentUser.uid, false);
@@ -174,12 +186,17 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
         senderName: currentUserData?.fullName || currentUserData?.companyName || 'User',
       });
 
+      console.log('📨 Send result:', result);
+
       if (result.success) {
+        console.log('✅ Message sent successfully');
         setMessage('');
         // No need to manually fetch - real-time subscription handles it!
+      } else {
+        console.error('❌ Failed to send message:', result.error);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
     } finally {
       setIsSending(false);
     }
