@@ -28,8 +28,8 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
 
   useEffect(() => {
     initializeChat();
-    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
-    return () => clearInterval(interval);
+    // Real-time subscription will be set up in initializeChat
+    // No more polling needed!
   }, []);
 
   const initializeChat = async () => {
