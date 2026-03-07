@@ -9,19 +9,97 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image as RNImage,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { API_CONFIG } from '../config/api.config';
 
 const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }) => {
   const [resetMethod, setResetMethod] = useState('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSendCode = () => {
-    const contact = resetMethod === 'phone' ? phoneNumber : email;
-    if (contact) {
-      onSendCode(resetMethod, contact);
+  const handleSendCode = async () => {
+    // Email reset - use Firebase
+    if (resetMethod === 'email') {
+      if (!email.trim()) {
+        Alert.alert('Error', 'Please enter your email address');
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        Alert.alert('Error', 'Please enter a valid email address');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // Optional: Check if email exists in your database first
+        // This is less secure but provides better UX
+        const checkResponse = await fetch(`${API_CONFIG.AUTH_ENDPOINT}/check-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        });
+        
+        const checkResult = await checkResponse.json();
+        
+        if (!checkResult.exists) {
+          Alert.alert(
+            'Email Not Found',
+            'No account found with this email address. Please check your email or sign up for a new account.',
+            [{ text: 'OK' }]
+          );
+          setLoading(false);
+          return;
+        }
+
+        // Email exists, send reset link
+        await sendPasswordResetEmail(auth, email);
+        Alert.alert(
+          'Success',
+          'If an account exists with this email, you will receive a password reset link. Please check your inbox and spam folder.',
+          [
+            {
+              text: 'OK',
+              onPress: () => onBackToLogin && onBackToLogin()
+            }
+          ]
+        );
+      } catch (error) {
+        console.error('Firebase password reset error:', error);
+        let errorMessage = 'Failed to send reset email. Please try again.';
+        
+        if (error.code === 'auth/user-not-found') {
+          errorMessage = 'No account found with this email address.';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = 'Invalid email address format.';
+        } else if (error.code === 'auth/too-many-requests') {
+          errorMessage = 'Too many attempts. Please try again later.';
+        }
+        
+        Alert.alert('Error', errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    } 
+    // Phone reset - use existing method (Twilio OTP)
+    else {
+      if (!phoneNumber.trim()) {
+        Alert.alert('Error', 'Please enter your phone number');
+        return;
+      }
+      
+      if (onSendCode) {
+        onSendCode(resetMethod, phoneNumber);
+      }
     }
   };
 
@@ -49,7 +127,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }) => {
           {/* Brand Icon */}
           <View style={styles.brandBadge}>
             <RNImage 
-              source={require('../../assets/Icon.png')} 
+              source={require('../../assets/Logo.png')} 
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -142,7 +220,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }) => {
                   />
                 </View>
                 <Text style={styles.helperText}>
-                  We'll send a verification code via email
+                  We'll send a password reset link via email
                 </Text>
               </View>
             )}
@@ -150,11 +228,20 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }) => {
             {/* Send Code Button */}
             <TouchableOpacity
               onPress={handleSendCode}
-              style={styles.sendButton}
+              style={[styles.sendButton, loading && styles.sendButtonDisabled]}
               activeOpacity={0.8}
+              disabled={loading}
             >
-              <Ionicons name="paper-plane-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.sendButtonText}>Send Code</Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="paper-plane-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={styles.sendButtonText}>
+                    {resetMethod === 'email' ? 'Send Reset Link' : 'Send Code'}
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
 
             {/* Back to Login */}
@@ -195,22 +282,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#fff',
+    width: 90,
+    height: 90,
+    borderRadius: 18,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: 'hidden',
   },
   logoImage: {
-    width: 60,
-    height: 60,
+    width: 65,
+    height: 65,
   },
   brandTitle: {
     fontSize: 24,
@@ -319,6 +407,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  sendButtonDisabled: {
+    opacity: 0.6,
   },
   backToLoginButton: {
     flexDirection: 'row',
