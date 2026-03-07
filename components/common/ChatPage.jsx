@@ -113,6 +113,15 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
           originalUnsubscribe();
           unsubscribeChat();
         };
+        
+        // Subscribe to participant's online status
+        onlineStatusUnsubscribeRef.current = firebaseChatService.subscribeToOnlineStatus(
+          participant.firebaseUid,
+          (status) => {
+            setIsOnline(status.isOnline);
+            setLastSeen(status.lastSeen);
+          }
+        );
       }
     } catch (error) {
       console.error('Error initializing chat:', error);
