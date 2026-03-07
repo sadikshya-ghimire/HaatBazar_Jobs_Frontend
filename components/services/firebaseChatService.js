@@ -187,4 +187,24 @@ export const firebaseChatService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Update user online status
+   * @param {string} userId - User's Firebase UID
+   * @param {boolean} isOnline - Online status
+   */
+  updateOnlineStatus: async (userId, isOnline) => {
+    try {
+      const userStatusRef = doc(db, 'userStatus', userId);
+      await setDoc(userStatusRef, {
+        isOnline,
+        lastSeen: serverTimestamp(),
+      }, { merge: true });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating online status:', error);
+      return { success: false, error: error.message };
+    }
+  },
 };
