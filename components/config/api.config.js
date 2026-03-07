@@ -1,28 +1,71 @@
 import { Platform } from 'react-native';
 
-// API Configuration
-// Automatically detects platform and uses correct URL
+// 🚀 DYNAMIC IP CONFIGURATION
+// This will try to auto-detect your IP, but you can also set it manually
 
-// IMPORTANT: Update this with your computer's IP address for mobile testing
-// Find your IP: 
-// - Mac/Linux: Run in terminal: ifconfig | grep "inet "
-// - Windows: Run in terminal: ipconfig
-const YOUR_COMPUTER_IP = "192.168.1.74"; // ⚠️ Your computer's IP address
+// MANUAL IP (Update this if auto-detection doesn't work)
+const MANUAL_IP = '192.168.1.74'; // ⚠️ Update with your current IP
 
-// Automatically use correct URL based on platform
-const getApiBaseUrl = () => {
-  if (Platform.OS === 'web') {
-    // Web browser can use localhost
-    return "http://localhost:8080";
-  } else {
-    // Mobile devices need your computer's IP address
-    return `http://${YOUR_COMPUTER_IP}:8080`;
+// Try to auto-detect IP from Expo (works if expo-constants is installed)
+const getAutoDetectedIP = () => {
+  try {
+    // Try to import expo-constants dynamically
+    const Constants = require('expo-constants').default;
+    
+    if (Constants && Constants.manifest) {
+      const { debuggerHost, hostUri } = Constants.manifest;
+      
+      if (debuggerHost) {
+        const ip = debuggerHost.split(':')[0];
+        console.log('✅ Auto-detected IP from debuggerHost:', ip);
+        return ip;
+      }
+      
+      if (hostUri) {
+        const ip = hostUri.split(':')[0];
+        console.log('✅ Auto-detected IP from hostUri:', ip);
+        return ip;
+      }
+    }
+  } catch (error) {
+    console.log('ℹ️ expo-constants not available, using manual IP');
   }
+  
+  return null;
 };
 
-const API_BASE_URL = getApiBaseUrl();
+const getApiBaseUrl = () => {
+  // For web, use localhost
+  if (Platform.OS === 'web') {
+    return 'http://localhost:8080';
+  }
+  
+  // For mobile, try auto-detection first, then fall back to manual IP
+  const autoIP = getAutoDetectedIP();
+  const ip = autoIP || MANUAL_IP;
+  
+  console.log('📡 Using IP:', ip, autoIP ? '(auto-detected)' : '(manual)');
+  return `http://${ip}:8080`;
+};
+
+const BASE_URL = getApiBaseUrl();
+
+console.log('🌐 API Configuration:');
+console.log('   Platform:', Platform.OS);
+console.log('   Base URL:', BASE_URL);
+console.log('   Backend should be running at:', BASE_URL);
 
 export const API_CONFIG = {
-  BASE_URL: API_BASE_URL,
-  AUTH_ENDPOINT: `${API_BASE_URL}/api/auth`,
+  BASE_URL: BASE_URL,
+  AUTH_ENDPOINT: `${BASE_URL}/api/auth`,
+  WORKER_PROFILE_ENDPOINT: `${BASE_URL}/api/worker-profile`,
+  EMPLOYER_PROFILE_ENDPOINT: `${BASE_URL}/api/employer-profile`,
+  WORKER_JOB_OFFER_ENDPOINT: `${BASE_URL}/api/worker-job-offers`,
+  EMPLOYER_JOB_OFFER_ENDPOINT: `${BASE_URL}/api/employer-job-offers`,
+  BOOKING_ENDPOINT: `${BASE_URL}/api/bookings`,
+  CHAT_ENDPOINT: `${BASE_URL}/api/chats`,
+  UPLOAD_ENDPOINT: `${BASE_URL}/api/upload`,
 };
+
+// Export for backward compatibility
+export default API_CONFIG;

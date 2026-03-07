@@ -1,5 +1,7 @@
-import { API_URL } from '../config/api';
+import { API_CONFIG } from '../config/api.config';
 import { Platform } from 'react-native';
+
+const API_URL = API_CONFIG.BASE_URL + '/api';
 
 export const profileService = {
   // Upload profile photo
@@ -151,8 +153,21 @@ export const profileService = {
 
   checkWorkerVerification: async (firebaseUid: string) => {
     try {
-      const response = await fetch(`${API_URL}/worker-profile/${firebaseUid}`);
+      console.log('🔍 Checking worker verification for:', firebaseUid);
+      console.log('📡 API URL:', `${API_URL}/worker-profile/${firebaseUid}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_URL}/worker-profile/${firebaseUid}`, {
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
       const result = await response.json();
+      console.log('✅ Verification check result:', result);
+      
       if (result.success && result.data) {
         return {
           success: true,
@@ -166,11 +181,18 @@ export const profileService = {
         profileExists: false,
       };
     } catch (error) {
-      console.error('Error checking worker verification:', error);
+      console.error('❌ Error checking worker verification:', error);
+      
+      // Check if it's a timeout error
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('⏱️ Request timed out - check if backend is running and IP is correct');
+      }
+      
       return {
         success: false,
         isVerified: false,
         profileExists: false,
+        error: error instanceof Error ? error.message : 'Network error',
       };
     }
   },
@@ -242,8 +264,21 @@ export const profileService = {
 
   checkEmployerVerification: async (firebaseUid: string) => {
     try {
-      const response = await fetch(`${API_URL}/employer-profile/${firebaseUid}`);
+      console.log('🔍 Checking employer verification for:', firebaseUid);
+      console.log('📡 API URL:', `${API_URL}/employer-profile/${firebaseUid}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_URL}/employer-profile/${firebaseUid}`, {
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
       const result = await response.json();
+      console.log('✅ Verification check result:', result);
+      
       if (result.success && result.data) {
         return {
           success: true,
@@ -257,11 +292,18 @@ export const profileService = {
         profileExists: false,
       };
     } catch (error) {
-      console.error('Error checking employer verification:', error);
+      console.error('❌ Error checking employer verification:', error);
+      
+      // Check if it's a timeout error
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('⏱️ Request timed out - check if backend is running and IP is correct');
+      }
+      
       return {
         success: false,
         isVerified: false,
         profileExists: false,
+        error: error instanceof Error ? error.message : 'Network error',
       };
     }
   },

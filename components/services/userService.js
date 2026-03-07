@@ -6,6 +6,7 @@ export const userService = {
   saveUserProfile: async (firebaseUid, email, userType, displayName) => {
     try {
       console.log('💾 Saving user profile to backend...');
+      console.log('API URL:', `${BASE_URL}/save-profile`);
       console.log('Firebase UID:', firebaseUid);
       console.log('Email:', email);
       console.log('User Type:', userType);
@@ -18,14 +19,20 @@ export const userService = {
         body: JSON.stringify({ firebaseUid, email, userType, displayName }),
       });
       
+      console.log('Response status:', res.status);
+      console.log('Response ok:', res.ok);
+      
       const data = await res.json();
       console.log('Save Profile Response:', data);
       return data;
     } catch (error) {
       console.error("Save profile error:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
       return { 
         success: false, 
-        message: "Network error. Make sure backend is running on port 8080." 
+        message: `Network error: ${error.message}. Check if backend is running and accessible.`,
+        code: 'NETWORK_ERROR'
       };
     }
   },
@@ -33,6 +40,7 @@ export const userService = {
   getUserProfile: async (firebaseUid) => {
     try {
       console.log('📥 Getting user profile from backend...');
+      console.log('API URL:', `${BASE_URL}/profile/${firebaseUid}`);
       console.log('Firebase UID:', firebaseUid);
       
       const res = await fetch(`${BASE_URL}/profile/${firebaseUid}`, {
@@ -42,14 +50,20 @@ export const userService = {
         },
       });
       
+      console.log('Response status:', res.status);
+      console.log('Response ok:', res.ok);
+      
       const data = await res.json();
       console.log('Get Profile Response:', data);
       return data;
     } catch (error) {
       console.error("Get profile error:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
       return { 
         success: false, 
-        message: "Network error. Make sure backend is running on port 8080." 
+        message: `Network error: ${error.message}. Check if backend is running and accessible.`,
+        code: 'NETWORK_ERROR'
       };
     }
   },
