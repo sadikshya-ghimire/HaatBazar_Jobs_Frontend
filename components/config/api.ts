@@ -7,7 +7,11 @@ import { Platform } from 'react-native';
 // Find your IP: 
 // - Mac/Linux: Run in terminal: ifconfig | grep "inet "
 // - Windows: Run in terminal: ipconfig
-const YOUR_COMPUTER_IP = "192.168.1.74"; // ⚠️ Update with your computer's IP address
+// 
+// HOTSPOT USERS: When using mobile hotspot, look for:
+// - iPhone hotspot: Usually starts with 172.20.x.x
+// - Android hotspot: Usually starts with 192.168.43.x or 192.168.x.x
+const YOUR_COMPUTER_IP = "172.20.10.4"; // ⚠️ Update with your computer's IP address
 
 // Automatically use correct URL based on platform
 const getApiBaseUrl = () => {

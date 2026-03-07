@@ -115,6 +115,8 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }) => {
             setErrors({ ...errors, phoneNumber: 'No account found with this phone number' });
           } else if (result.code === 'WRONG_PASSWORD') {
             setErrors({ ...errors, password: 'Incorrect password. Please try again.' });
+          } else if (result.code === 'NETWORK_ERROR') {
+            setErrors({ ...errors, general: 'Cannot connect to server. Make sure you are on the same WiFi network as your computer.' });
           } else {
             setErrors({ ...errors, general: result.message || 'Unable to login. Please try again.' });
           }
@@ -158,28 +160,62 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }) => {
           return;
         }
 
-        const userProfile = await userService.getUserProfile(user.uid);
+        // Try to get user profile
+        let userProfile = await userService.getUserProfile(user.uid);
+
+        // If profile doesn't exist, create it
+        if (!userProfile.success) {
+          console.log('Profile not found, creating new profile...');
+          
+          // Check if it's a network error
+          if (userProfile.code === 'NETWORK_ERROR') {
+            setIsLoading(false);
+            setErrors({ 
+              ...errors, 
+              general: 'Cannot connect to server. Make sure:\n1. Backend is running (npm start in backend folder)\n2. You are on the same WiFi network\n3. IP address in api.config.js is correct (currently: 192.168.1.74)' 
+            });
+            return;
+          }
+          
+          const saveResult = await userService.saveUserProfile(
+            user.uid,
+            user.email,
+            null, // userType will be set during registration
+            user.displayName || user.email
+          );
+          
+          if (saveResult.success) {
+            userProfile = saveResult;
+          } else {
+            setIsLoading(false);
+            if (saveResult.code === 'NETWORK_ERROR') {
+              setErrors({ 
+                ...errors, 
+                general: 'Cannot connect to server. Make sure backend is running and you are on the same WiFi network.' 
+              });
+            } else {
+              setErrors({ ...errors, general: 'Unable to create user profile. Please try again.' });
+            }
+            return;
+          }
+        }
 
         setIsLoading(false);
 
-        if (userProfile.success) {
-          const userType = userProfile.user.userType || 'worker';
-          const profileComplete = userProfile.user.profileComplete || false;
-          const displayName = userProfile.user.displayName || user.displayName || 'User';
-          
-          showCustomAlert(
-            "Welcome Back! 🎉",
-            "Login successful",
-            [
-              {
-                text: "Continue",
-                onPress: () => onLoginSuccess?.(userType, profileComplete, displayName)
-              }
-            ]
-          );
-        } else {
-          setErrors({ ...errors, general: 'Unable to fetch user profile. Please try again.' });
-        }
+        const userType = userProfile.user.userType || 'worker';
+        const profileComplete = userProfile.user.profileComplete || false;
+        const displayName = userProfile.user.displayName || user.displayName || 'User';
+        
+        showCustomAlert(
+          "Welcome Back! 🎉",
+          "Login successful",
+          [
+            {
+              text: "Continue",
+              onPress: () => onLoginSuccess?.(userType, profileComplete, displayName)
+            }
+          ]
+        );
       } catch (error) {
         setIsLoading(false);
         
@@ -229,7 +265,7 @@ const LoginPage = ({ onBack, onSignUp, onLoginSuccess, onForgotPassword }) => {
           {/* Brand Icon */}
           <View style={styles.brandBadge}>
             <RNImage 
-              source={require('../../assets/Icon.png')} 
+              source={require('../../assets/Logo.png')} 
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -441,10 +477,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandBadge: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    width: 90,
+    height: 90,
+    borderRadius: 18,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -453,10 +489,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 6,
+    overflow: 'hidden',
   },
   logoImage: {
-    width: 70,
-    height: 70,
+    width: 65,
+    height: 65,
   },
   brandTitle: {
     fontSize: 24,

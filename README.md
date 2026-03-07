@@ -83,7 +83,54 @@ Supports multiple authentication methods:
 
 ## Mobile Setup
 
-For testing on physical devices, update the API URL in `components/config/api.config.js` with your computer's IP address.
+### Testing on Physical Devices
+
+When testing on a physical mobile device (not emulator), you need to configure the API to connect to your computer's backend server.
+
+#### Step 1: Find Your Computer's IP Address
+
+**In the backend folder, run:**
+```bash
+cd backend
+npm run get-ip
+```
+
+This will show your computer's IP address (e.g., `192.168.1.74`)
+
+**Or manually find it:**
+- Mac/Linux: `ifconfig | grep "inet "`
+- Windows: `ipconfig`
+
+#### Step 2: Update Frontend Configuration
+
+Edit `frontend/components/config/api.config.js`:
+```javascript
+const YOUR_COMPUTER_IP = "192.168.1.74"; // ⚠️ UPDATE THIS
+```
+
+#### Step 3: Start Backend Server
+
+```bash
+cd backend
+npm start
+```
+
+You should see: `🚀 Server running on port 8080`
+
+#### Step 4: Ensure Same WiFi Network
+
+- Your computer and mobile device MUST be on the same WiFi network
+- Don't use mobile data
+
+#### Troubleshooting
+
+If you see "Unable to fetch user profile" error:
+
+1. Check backend is running: `npm start` in backend folder
+2. Verify IP address is correct in `api.config.js`
+3. Ensure both devices on same WiFi
+4. Check firewall allows port 8080
+5. See detailed guide: `MOBILE_CONNECTION_TROUBLESHOOTING.md`
 
 ## Environment Variables
 

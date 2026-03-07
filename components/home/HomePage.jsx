@@ -186,7 +186,7 @@ const HomePage = ({ onLogin, onSignup }) => {
             <View style={styles.heroLeft}>
               <View style={styles.logoBadge}>
                 <RNImage 
-                  source={require('../../assets/Icon.png')} 
+                  source={require('../../assets/Logo.png')} 
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   heroContent: { flexDirection: width > 768 ? 'row' : 'column', gap: 40, alignItems: 'center' },
   heroLeft: { flex: 1, maxWidth: width > 768 ? '50%' : '100%' },
   heroRight: { flex: 1, maxWidth: width > 768 ? '50%' : '100%', width: '100%' },
-  logoBadge: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255, 255, 255, 0.95)', alignItems: 'center', justifyContent: 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 6 },
+  logoBadge: { width: 100, height: 100, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.95)', alignItems: 'center', justifyContent: 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 8, overflow: 'hidden' },
   logoImage: { width: 70, height: 70 },
   brandTitle: { fontSize: 24, fontWeight: 'bold', color: '#1e293b', marginBottom: 24 },
   heroBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f1f5f9', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 20 },

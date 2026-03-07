@@ -248,7 +248,7 @@ const SignUpPage = ({ onBack, onLogin, onSignUpSuccess }) => {
           {/* Brand Icon */}
           <View style={styles.brandBadge}>
             <RNImage 
-              source={require('../../assets/Icon.png')} 
+              source={require('../../assets/Logo.png')} 
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -571,10 +571,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandBadge: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    width: 90,
+    height: 90,
+    borderRadius: 18,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -583,10 +583,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 6,
+    overflow: 'hidden',
   },
   logoImage: {
-    width: 70,
-    height: 70,
+    width: 65,
+    height: 65,
   },
   brandTitle: {
     fontSize: 24,
