@@ -87,15 +87,16 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
       setIsSending(true);
       const currentUser = auth.currentUser;
       
-      const result = await chatService.sendMessage(chatId, currentUser.uid, message.trim());
+      // Send message using Firebase (instant delivery!)
+      const result = await firebaseChatService.sendMessage(chatId, {
+        text: message.trim(),
+        senderId: currentUser.uid,
+        senderName: currentUserData?.fullName || currentUserData?.companyName || 'User',
+      });
 
       if (result.success) {
         setMessage('');
-        await fetchMessages();
-        // Scroll to bottom
-        setTimeout(() => {
-          scrollViewRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        // No need to manually fetch - real-time subscription handles it!
       }
     } catch (error) {
       console.error('Error sending message:', error);
