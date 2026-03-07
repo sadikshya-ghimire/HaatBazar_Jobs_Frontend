@@ -84,6 +84,7 @@ export default function EditProfilePage({ onBack, userType, currentProfile }) {
   const handleSave = async () => {
     // Basic validation - only check if at least one identifying field exists
     // Allow saving even if only photo is changed
+    // This provides flexibility for users who just want to update their profile picture
     if (userType === 'worker' && !profileData.fullName && !currentProfile?.fullName) {
       Alert.alert('Error', 'Please enter your name');
       return;
