@@ -22,6 +22,9 @@ import { API_CONFIG } from '../config/api.config';
 import WorkerDetailsPage from '../employer/WorkerDetailsPage';
 import ChatPage from '../common/ChatPage';
 import BookingFormPage from '../employer/BookingFormPage';
+import SettingsPage from '../profile/SettingsPage';
+import HelpSupportPage from '../profile/HelpSupportPage';
+import EditProfilePage from '../profile/EditProfilePage';
 
 export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [selectedTab, setSelectedTab] = useState('home');
@@ -43,6 +46,9 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
   const [showWorkerDetails, setShowWorkerDetails] = useState(false);
   const [showContactWorker, setShowContactWorker] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHelpSupport, setShowHelpSupport] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
@@ -158,7 +164,18 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
       const firebaseUid = auth.currentUser?.uid;
       if (firebaseUid) {
         const result = await chatService.getUserChats(firebaseUid);
+        console.log('💬 Chats fetched:', result);
         if (result.success && result.data) {
+          console.log('💬 Number of chats:', result.data.length);
+          result.data.forEach((chat, index) => {
+            console.log(`Chat ${index + 1}:`, {
+              id: chat._id,
+              participants: chat.participants.map(p => ({
+                name: p.name,
+                profilePhoto: p.profilePhoto
+              }))
+            });
+          });
           setChats(result.data);
         }
       }
@@ -376,7 +393,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
         <View style={styles.headerContent}>
           <View style={styles.logoContainer}>
             <RNImage 
-              source={require('../../assets/Icon.png')} 
+              source={require('../../assets/Logo.png')} 
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -929,8 +946,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleActionWithVerification(() => {
-                  // Edit profile logic - to be implemented
-                  showAlert('info', 'Coming Soon', 'Profile editing feature will be available soon!');
+                  setShowEditProfile(true);
                 })}
               >
                 <View style={styles.menuItemLeft}>
@@ -957,7 +973,7 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleActionWithVerification(() => {
-                  // Settings logic
+                  setShowSettings(true);
                 })}
               >
                 <View style={styles.menuItemLeft}>
@@ -967,7 +983,12 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
                 <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleActionWithVerification(() => {
+                  setShowHelpSupport(true);
+                })}
+              >
                 <View style={styles.menuItemLeft}>
                   <Ionicons name="help-circle-outline" size={20} color="#64748b" />
                   <Text style={styles.menuItemText}>Help & Support</Text>
@@ -1416,6 +1437,51 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
               setSelectedWorker(null);
             }}
             onSubmit={handleBookingSubmit}
+          />
+        </Modal>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Modal
+          visible={showSettings}
+          animationType="slide"
+          onRequestClose={() => setShowSettings(false)}
+        >
+          <SettingsPage 
+            onBack={() => setShowSettings(false)}
+            userType="employer"
+          />
+        </Modal>
+      )}
+
+      {/* Help & Support Modal */}
+      {showHelpSupport && (
+        <Modal
+          visible={showHelpSupport}
+          animationType="slide"
+          onRequestClose={() => setShowHelpSupport(false)}
+        >
+          <HelpSupportPage 
+            onBack={() => setShowHelpSupport(false)}
+          />
+        </Modal>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <Modal
+          visible={showEditProfile}
+          animationType="slide"
+          onRequestClose={() => setShowEditProfile(false)}
+        >
+          <EditProfilePage 
+            onBack={() => {
+              setShowEditProfile(false);
+              fetchProfileData(); // Refresh profile data after editing
+            }}
+            userType="employer"
+            currentProfile={profileData}
           />
         </Modal>
       )}
