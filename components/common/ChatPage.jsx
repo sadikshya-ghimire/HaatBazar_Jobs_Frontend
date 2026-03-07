@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../config/firebase';
 import { API_CONFIG } from '../config/api.config';
 import { firebaseChatService } from '../services/firebaseChatService';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 export default function ChatPage({ participant, onBack, currentUserData, userType }) {
@@ -68,7 +68,26 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
       }
 
       console.log('🔄 Initializing chat...');
+      console.log('📱 Current user:', currentUser.uid);
+      console.log('👤 Participant:', participant.firebaseUid);
       setIsLoading(true);
+
+      // Test Firestore connection first
+      console.log('🧪 Testing Firestore connection...');
+      try {
+        const testRef = doc(db, 'test', 'connection');
+        await setDoc(testRef, { timestamp: new Date().toISOString() }, { merge: true });
+        console.log('✅ Firestore connection test successful');
+      } catch (testError) {
+        console.error('❌ Firestore connection test failed:', testError);
+        Alert.alert(
+          'Connection Error',
+          'Cannot connect to Firebase. Please check:\n\n1. Internet connection\n2. Firebase configuration\n3. Firestore security rules',
+          [{ text: 'OK' }]
+        );
+        setIsLoading(false);
+        return;
+      }
 
       // Prepare participant data
       const participant1 = {
