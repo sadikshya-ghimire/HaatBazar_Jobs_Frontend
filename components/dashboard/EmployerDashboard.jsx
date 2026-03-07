@@ -180,14 +180,19 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
         chatsUnsubscribeRef.current = firebaseChatService.subscribeToUserChats(
           firebaseUid,
           async (firebaseChats) => {
-            // Enrich chats with last message
+            // Enrich chats with last message and unread count
             const enrichedChats = await Promise.all(
               firebaseChats.map(async (chat) => {
                 const lastMessageResult = await firebaseChatService.getLastMessage(chat.id);
+                const unreadResult = await firebaseChatService.getUnreadCount(chat.id, firebaseUid);
+                
                 return {
                   ...chat,
                   _id: chat.id,
                   lastMessage: lastMessageResult.data,
+                  unreadCount: {
+                    [firebaseUid]: unreadResult.count || 0
+                  }
                 };
               })
             );
@@ -400,6 +405,12 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
       setIsPosting(false);
     }
   };
+
+  // Calculate total unread messages
+  const totalUnreadMessages = chats.reduce((total, chat) => {
+    const unreadCount = chat.unreadCount?.[auth.currentUser?.uid] || 0;
+    return total + unreadCount;
+  }, 0);
 
   const stats = [
     { label: 'Posted Jobs', value: postedJobs.length.toString(), icon: 'briefcase', color: '#3b82f6' },
@@ -1087,9 +1098,13 @@ export default function EmployerDashboard({ onLogout, userName = 'Employer' }) {
               size={24} 
               color={selectedTab === 'messages' ? '#1e293b' : '#94a3b8'} 
             />
-            <View style={styles.messageBadge}>
-              <Text style={styles.messageBadgeText}>2</Text>
-            </View>
+            {totalUnreadMessages > 0 && (
+              <View style={styles.messageBadge}>
+                <Text style={styles.messageBadgeText}>
+                  {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
+                </Text>
+              </View>
+            )}
           </View>
           <Text style={[styles.navText, selectedTab === 'messages' && styles.navTextActive]}>
             Messages

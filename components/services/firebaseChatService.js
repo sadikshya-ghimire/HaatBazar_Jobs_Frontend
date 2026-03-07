@@ -374,4 +374,27 @@ export const firebaseChatService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Get unread message count for a user in a chat
+   * @param {string} chatId - The chat ID
+   * @param {string} userId - User's Firebase UID
+   * @returns {number} Unread message count
+   */
+  getUnreadCount: async (chatId, userId) => {
+    try {
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      const q = query(
+        messagesRef, 
+        where('senderId', '!=', userId),
+        where('read', '==', false)
+      );
+      
+      const snapshot = await getDocs(q);
+      return { success: true, count: snapshot.size };
+    } catch (error) {
+      console.error('Error getting unread count:', error);
+      return { success: false, count: 0 };
+    }
+  },
 };
