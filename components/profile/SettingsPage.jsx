@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 export default function SettingsPage({ onBack, userType }) {
+  // Notification preferences - controls how users receive updates
   const [notifications, setNotifications] = useState({
     pushNotifications: true,
     emailNotifications: true,
@@ -22,6 +23,7 @@ export default function SettingsPage({ onBack, userType }) {
     promotions: false,
   });
 
+  // Privacy settings - controls profile visibility and contact info display
   const [privacy, setPrivacy] = useState({
     profileVisible: true,
     showPhone: true,
