@@ -16,6 +16,7 @@ import {
   getDocs,
   where,
   updateDoc,
+  limit,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -234,6 +235,36 @@ export const firebaseChatService = {
     } catch (error) {
       console.error('Error subscribing to online status:', error);
       return () => {};
+    }
+  },
+
+  /**
+   * Get last message from a chat
+   * @param {string} chatId - The chat ID
+   * @returns {object} Last message data
+   */
+  getLastMessage: async (chatId) => {
+    try {
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      const q = query(messagesRef, orderBy('timestamp', 'desc'), limit(1));
+      
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        return {
+          success: true,
+          data: {
+            id: doc.id,
+            ...doc.data(),
+            timestamp: doc.data().timestamp?.toDate(),
+          },
+        };
+      }
+      
+      return { success: true, data: null };
+    } catch (error) {
+      console.error('Error getting last message:', error);
+      return { success: false, error: error.message };
     }
   },
 };
