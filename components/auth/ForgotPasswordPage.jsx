@@ -35,7 +35,7 @@ const ForgotPasswordPage = ({ onBack, onBackToLogin, onSendCode }) => {
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        Alert.alert('Error', 'Please enter a valid email address');
+        Alert.alert('Invalid Email', 'Please enter a valid email address');
         return;
       }
 
