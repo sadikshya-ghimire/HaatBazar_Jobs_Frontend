@@ -219,7 +219,9 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
           </View>
           <View style={styles.headerInfo}>
             <Text style={styles.headerName} numberOfLines={1}>{participantName}</Text>
-            <Text style={styles.headerStatus}>Active now</Text>
+            <Text style={styles.headerStatus}>
+              {isTyping ? 'typing...' : 'Active now'}
+            </Text>
           </View>
         </View>
         
