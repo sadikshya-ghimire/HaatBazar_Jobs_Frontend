@@ -27,9 +27,12 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
+  const [lastSeen, setLastSeen] = useState(null);
   const scrollViewRef = useRef(null);
   const unsubscribeRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const onlineStatusUnsubscribeRef = useRef(null);
 
   useEffect(() => {
     initializeChat();
