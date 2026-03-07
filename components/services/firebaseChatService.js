@@ -115,4 +115,36 @@ export const firebaseChatService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Get all chats for a user
+   * @param {string} firebaseUid - User's Firebase UID
+   * @param {function} callback - Callback for real-time updates
+   * @returns {function} Unsubscribe function
+   */
+  subscribeToUserChats: (firebaseUid, callback) => {
+    try {
+      const chatsRef = collection(db, 'chats');
+      const q = query(
+        chatsRef,
+        where('participants', 'array-contains-any', [
+          { firebaseUid },
+        ])
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const chats = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        
+        callback(chats);
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error subscribing to user chats:', error);
+      return () => {};
+    }
+  },
 };
