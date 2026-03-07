@@ -89,6 +89,15 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
           result.chatId,
           (newMessages) => {
             setMessages(newMessages);
+            
+            // Mark unread messages as read
+            const currentUserId = auth.currentUser?.uid;
+            newMessages.forEach(msg => {
+              if (msg.senderId !== currentUserId && !msg.read) {
+                firebaseChatService.markMessageAsRead(result.chatId, msg.id);
+              }
+            });
+            
             // Auto-scroll to bottom when new message arrives
             setTimeout(() => {
               scrollViewRef.current?.scrollToEnd({ animated: true });
