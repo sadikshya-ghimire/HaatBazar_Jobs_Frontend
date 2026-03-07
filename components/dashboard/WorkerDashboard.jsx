@@ -17,7 +17,6 @@ import { auth } from '../config/firebase';
 import { jobOfferService } from '../services/jobOfferService';
 import { profileService } from '../services/profileService';
 import { bookingService } from '../services/bookingService';
-import { chatService } from '../services/chatService';
 import { firebaseChatService } from '../services/firebaseChatService';
 import { API_CONFIG } from '../config/api.config';
 import ChatPage from '../common/ChatPage';
