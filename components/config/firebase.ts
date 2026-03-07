@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, enableNetwork, initializeFirestore } from 'firebase/firestore';
+import { getAuth, Auth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getFirestore, Firestore, enableNetwork, initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Firebase configuration with the latest values from Firebase Console
 const firebaseConfig = {
@@ -36,20 +37,32 @@ try {
     app = getApp();
   }
   
-  auth = getAuth(app);
-  console.log('Firebase Auth initialized');
+  // Initialize Auth with React Native persistence
+  try {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage)
+    });
+    console.log('Firebase Auth initialized with AsyncStorage persistence');
+  } catch (error: any) {
+    if (error.code === 'auth/already-initialized') {
+      auth = getAuth(app);
+      console.log('Auth already initialized, using existing instance');
+    } else {
+      throw error;
+    }
+  }
+  
   console.log('Auth app name:', auth.app.name);
   console.log('Auth config apiKey:', auth.config.apiKey?.substring(0, 10) + '...');
   
-  // Initialize Firestore with settings
+  // Initialize Firestore with React Native optimized settings
   try {
     db = initializeFirestore(app, {
-      experimentalForceLongPolling: true, // Better for React Native
+      experimentalForceLongPolling: true,
       useFetchStreams: false,
     });
-    console.log('Firestore initialized with custom settings');
+    console.log('✅ Firestore initialized with React Native settings');
   } catch (error: any) {
-    // If already initialized, just get it
     if (error.code === 'failed-precondition') {
       db = getFirestore(app);
       console.log('Firestore already initialized, using existing instance');
@@ -57,18 +70,6 @@ try {
       throw error;
     }
   }
-  
-  // Enable network
-  enableNetwork(db).then(() => {
-    console.log('✅ Firestore network enabled successfully');
-  }).catch((error) => {
-    console.error('❌ Error enabling Firestore network:', error);
-    console.error('Error details:', {
-      code: error.code,
-      message: error.message,
-      name: error.name
-    });
-  });
   
   console.log('🔥 Firebase initialization complete');
   console.log('📊 Firestore instance:', db ? 'Created' : 'Failed');
