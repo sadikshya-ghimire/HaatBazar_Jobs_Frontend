@@ -384,14 +384,14 @@ export const firebaseChatService = {
   getUnreadCount: async (chatId, userId) => {
     try {
       const messagesRef = collection(db, 'chats', chatId, 'messages');
-      const q = query(
-        messagesRef, 
-        where('senderId', '!=', userId),
-        where('read', '==', false)
-      );
+      const q = query(messagesRef, where('read', '==', false));
       
       const snapshot = await getDocs(q);
-      return { success: true, count: snapshot.size };
+      
+      // Filter out messages sent by current user (count only received unread messages)
+      const unreadCount = snapshot.docs.filter(doc => doc.data().senderId !== userId).length;
+      
+      return { success: true, count: unreadCount };
     } catch (error) {
       console.error('Error getting unread count:', error);
       return { success: false, count: 0 };
