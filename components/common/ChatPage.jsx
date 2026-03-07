@@ -279,7 +279,7 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
               placeholder="iMessage"
               placeholderTextColor="#8e8e93"
               value={message}
-              onChangeText={setMessage}
+              onChangeText={handleTyping}
               multiline
               maxLength={1000}
             />
