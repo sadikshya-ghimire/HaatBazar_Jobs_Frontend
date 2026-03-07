@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -45,6 +45,7 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const chatsUnsubscribeRef = useRef(null);
   const [serviceForm, setServiceForm] = useState({
     title: '',
     description: '',
@@ -79,6 +80,13 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
     fetchMyJobs();
     fetchBookingRequests();
     fetchChats();
+    
+    // Cleanup Firebase subscriptions
+    return () => {
+      if (chatsUnsubscribeRef.current) {
+        chatsUnsubscribeRef.current();
+      }
+    };
   }, []);
 
   const fetchProfileData = async () => {
@@ -148,10 +156,32 @@ export default function WorkerDashboard({ onLogout, userName = 'Worker' }) {
     try {
       const firebaseUid = auth.currentUser?.uid;
       if (firebaseUid) {
-        const result = await chatService.getUserChats(firebaseUid);
-        if (result.success && result.data) {
-          setChats(result.data);
-        }
+        // Subscribe to real-time chat updates
+        chatsUnsubscribeRef.current = firebaseChatService.subscribeToUserChats(
+          firebaseUid,
+          async (firebaseChats) => {
+            // Enrich chats with last message
+            const enrichedChats = await Promise.all(
+              firebaseChats.map(async (chat) => {
+                const lastMessageResult = await firebaseChatService.getLastMessage(chat.id);
+                return {
+                  ...chat,
+                  _id: chat.id,
+                  lastMessage: lastMessageResult.data,
+                };
+              })
+            );
+            
+            // Sort by last message timestamp
+            enrichedChats.sort((a, b) => {
+              const timeA = a.lastMessage?.timestamp || new Date(0);
+              const timeB = b.lastMessage?.timestamp || new Date(0);
+              return timeB - timeA;
+            });
+            
+            setChats(enrichedChats);
+          }
+        );
       }
     } catch (error) {
       console.error('Error fetching chats:', error);
