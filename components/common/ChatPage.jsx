@@ -39,38 +39,39 @@ export default function ChatPage({ participant, onBack, currentUserData, userTyp
 
       setIsLoading(true);
 
-      // Create or get existing chat
+      // Prepare participant data
       const participant1 = {
         firebaseUid: currentUser.uid,
-        userType: userType,
         name: currentUserData?.fullName || currentUserData?.companyName || currentUser.displayName || 'User',
-        profilePhoto: currentUserData?.profilePhoto 
-          ? (currentUserData.profilePhoto.startsWith('http') 
-              ? currentUserData.profilePhoto 
-              : currentUserData.profilePhoto.startsWith('/') 
-                ? currentUserData.profilePhoto 
-                : `/${currentUserData.profilePhoto}`)
-          : '',
+        profilePhoto: currentUserData?.profilePhoto || '',
       };
 
       const participant2 = {
         firebaseUid: participant.firebaseUid,
-        userType: userType === 'employer' ? 'worker' : 'employer',
         name: participant.name || participant.workerName || participant.employerName,
-        profilePhoto: participant.profilePhoto 
-          ? (participant.profilePhoto.startsWith('http') 
-              ? participant.profilePhoto 
-              : participant.profilePhoto.startsWith('/') 
-                ? participant.profilePhoto 
-                : `/${participant.profilePhoto}`)
-          : '',
+        profilePhoto: participant.profilePhoto || '',
       };
 
-      const result = await chatService.createOrGetChat(participant1, participant2);
+      // Create or get chat using Firebase
+      const result = await firebaseChatService.createOrGetChat(participant1, participant2);
       
-      if (result.success && result.data) {
-        setChatId(result.data._id);
-        await fetchMessages(result.data._id);
+      if (result.success && result.chatId) {
+        setChatId(result.chatId);
+        
+        // Subscribe to real-time messages
+        const unsubscribe = firebaseChatService.subscribeToMessages(
+          result.chatId,
+          (newMessages) => {
+            setMessages(newMessages);
+            // Auto-scroll to bottom when new message arrives
+            setTimeout(() => {
+              scrollViewRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+          }
+        );
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
       }
     } catch (error) {
       console.error('Error initializing chat:', error);
