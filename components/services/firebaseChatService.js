@@ -207,4 +207,33 @@ export const firebaseChatService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Subscribe to user's online status
+   * @param {string} userId - User's Firebase UID
+   * @param {function} callback - Callback for status updates
+   * @returns {function} Unsubscribe function
+   */
+  subscribeToOnlineStatus: (userId, callback) => {
+    try {
+      const userStatusRef = doc(db, 'userStatus', userId);
+      
+      const unsubscribe = onSnapshot(userStatusRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          callback({
+            isOnline: data.isOnline || false,
+            lastSeen: data.lastSeen?.toDate(),
+          });
+        } else {
+          callback({ isOnline: false, lastSeen: null });
+        }
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error subscribing to online status:', error);
+      return () => {};
+    }
+  },
 };
