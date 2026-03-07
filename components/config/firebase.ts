@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 // Firebase configuration with the latest values from Firebase Console
 const firebaseConfig = {
@@ -21,6 +22,7 @@ console.log('Firebase Config:', {
 // Initialize Firebase
 let app: FirebaseApp;
 let auth: Auth;
+let db: Firestore;
 
 try {
   if (getApps().length === 0) {
@@ -38,10 +40,13 @@ try {
   console.log('Firebase Auth initialized');
   console.log('Auth app name:', auth.app.name);
   console.log('Auth config apiKey:', auth.config.apiKey?.substring(0, 10) + '...');
+  
+  db = getFirestore(app);
+  console.log('Firestore initialized');
 } catch (error) {
   console.error('Firebase initialization error:', error);
   throw error;
 }
 
-export { auth };
+export { auth, db };
 export default app;
