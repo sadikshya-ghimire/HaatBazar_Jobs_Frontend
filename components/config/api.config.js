@@ -6,8 +6,17 @@ import { Platform } from 'react-native';
 // Manual IP is used as fallback for direct device connections
 
 // MANUAL IP (Update this if auto-detection doesn't work)
-const MANUAL_IP = '192.168.1.74'; // ⚠️ Update with your current IP
-// Common IPs: WiFi (192.168.x.x), Hotspot iPhone (172.20.10.x), Hotspot Android (192.168.43.x)
+const MANUAL_IP = '192.0.0.2'; // ⚠️ Current: Phone hotspot IP
+// Common IPs: 
+// - WiFi: 192.168.x.x (e.g., 192.168.1.74)
+// - Phone Hotspot (laptop IP): Check laptop's WiFi settings for IP assigned by phone
+// - iPhone Hotspot: Usually 172.20.10.x (laptop gets 172.20.10.2, 172.20.10.3, etc.)
+// - Android Hotspot: Usually 192.168.43.x (laptop gets 192.168.43.xxx)
+
+// 🔥 HOTSPOT MODE: If using phone hotspot, find your laptop's IP:
+// Mac: System Preferences → Network → WiFi → IP address
+// Windows: Settings → Network → WiFi → Properties → IPv4 address
+// Linux: ifconfig or ip addr show
 
 // Try to auto-detect IP from Expo (works if expo-constants is installed)
 const getAutoDetectedIP = () => {
